@@ -11,9 +11,7 @@ with pdfplumber.open(file_path) as pdf:
     page1 = pdf.pages[0]
     text1 = page1.extract_text()
     page1shirts = text1[451:-49]
-    bill_to = re.search(r'Bill To(.+)',text1).group(1)
     #print(page1shirts)
-
     # clean page 2 data
     page2 = pdf.pages[1]
     text2 = page2.extract_text()
