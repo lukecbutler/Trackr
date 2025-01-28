@@ -1,14 +1,10 @@
 import pdfplumber
 
-# Path to your PDF file
-file_path = "invoice.pdf"
-
-
 # take in line of table - return values in list format
-def pdfToListOfShirts():
+def pdfToListOfShirts(filename):
 
         # take in entire text - create pg1 & p2 lines of shirt data
-    with pdfplumber.open(file_path) as pdf:
+    with pdfplumber.open(filename) as pdf:
 
         # show entire document raw
         # clean page 1 data
