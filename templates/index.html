@@ -9,28 +9,33 @@
 <body class="bg-light">
     <div class="container text-center">
         <h1 class="mb-3 mt-3">T-Shirt Inventory</h1>
-        <form id="addForm" class="mb-4">
-            <input type="text" id="description" class="form-control mb-2" placeholder="Description" required>
-            <input type="text" id="color" class="form-control mb-2" placeholder="Color" required>
-            <input type="text" id="size" class="form-control mb-2" placeholder="Size" required>
-            <input type="number" id="pieces" class="form-control mb-2" placeholder="Pieces" required>
-            <button type="submit" class="btn btn-primary">Add Shirt</button>
-        </form>
 
-        <input type="file" id="pdfInput">
-        <button onclick="uploadPdf()">uploadPDF</button>
+        <div>
+            <form action="/upload">
+                <input type="file" id = 'pdf'>
+                <input type="submit">
+            </form>
+        </div>
 
         <table class="table mt-2 table-hover table-striped table-sm">
-            <thead>
+                
+                <!-- table header -->
                 <tr>
                     <th>Description</th>
                     <th>Color</th>
                     <th>Size</th>
-                    <th>Pieces</th>
-                    <th>Actions</th>
+                    <th>Quantity</th>
                 </tr>
-            </thead>
-            <tbody id="inventoryTable"></tbody>
+
+                <!-- data from pdf to rows -->
+                {% for row in listOfShirts %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                </tr>
+                {% endfor %}
         </table>
     </div>
     <script src="app.js"></script>
