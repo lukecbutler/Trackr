@@ -5,7 +5,7 @@ def pdfToListOfShirts(filename):
 
         # take in entire text - create pg1 & p2 lines of shirt data
     with pdfplumber.open(filename) as pdf:
-
+        
         # show entire document raw
         # clean page 1 data
         page1 = pdf.pages[0]
@@ -59,25 +59,3 @@ def pdfToListOfShirts(filename):
         entireList.append(currentList)
 
     return entireList
-
-def createTable():
-    # Header and data
-    header = ["Description", "Color", "Size", "Quantity"]
-    shirt_data = pdfToListOfShirts()
-
-    # Calculate the maximum width of each column
-    col_widths = [
-        max(len(str(row[i])) for row in ([header] + shirt_data))
-        for i in range(len(header))
-    ]
-
-    # Create a row format string based on column widths
-    row_format = "  ".join(f"{{:<{width}}}" for width in col_widths)
-
-    # Print the header
-    print(row_format.format(*header))
-    print("-" * (sum(col_widths) + 2 * (len(col_widths) - 1)))
-
-    # Print each row of data
-    for row in shirt_data:
-        print(row_format.format(*row))

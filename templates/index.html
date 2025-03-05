@@ -8,6 +8,7 @@
 </head>
 <body class="bg-light">
 
+    <!-- file upload -->
     <div class="text-center">
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <input type="file" name="file">
@@ -16,7 +17,7 @@
     </div>
 
 
-
+    <!-- table of shirts -->
     <div class="container text-center">
         <h1 class="mb-3 mt-3">T-Shirt Inventory</h1>
 
@@ -31,7 +32,7 @@
                 </tr>
 
                 <!-- data from pdf to rows -->
-                {% for row in listOfShirts %}
+                {% for row in shirts %}
                 <tr>
                     <td>{{ row[0] }}</td>
                     <td>{{ row[1] }}</td>
@@ -41,6 +42,5 @@
                 {% endfor %}
         </table>
     </div>
-    <script src="app.js"></script>
 </body>
 </html>
