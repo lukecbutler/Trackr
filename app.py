@@ -2,7 +2,6 @@ from flask import Flask, request, render_template, redirect
 from dataExtract import pdfToListOfShirts
 import sqlite3
 
-
 app = Flask(__name__)
 
 # Database connection
@@ -10,13 +9,12 @@ DATABASE = "shirts.db"
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # Enable dictionary-like access
     return conn
 
 @app.route('/', methods=['GET'])
 def home():
-
-    conn = sqlite3.connect('shirts.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Create the table if it doesn't exist
@@ -32,14 +30,13 @@ def home():
 
     # Pull data from database - set as shirts variable
     shirts = cursor.execute('''
-    SELECT description, color, size, quantity FROM shirts;
-    ''')
-    print(shirts)
-    return render_template("index.html", shirts = shirts)
+        SELECT description, color, size, quantity FROM shirts;
+    ''').fetchall()
 
+    conn.close()
+    return render_template("index.html", shirts=shirts)
 
-
-# how to upload a file
+# How to upload a file
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
@@ -51,26 +48,41 @@ def upload():
     print(listOfShirts)
     return redirect("/")
 
-
-
 def shirtsToDatabase(listOfShirts):
-    # Connect to the SQLite database (or create it if it doesn't exist)
-    conn = sqlite3.connect('shirts.db')
+    # Connect to the SQLite database using the connection function
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Insert each shirt into the database
+    # Insert or update each shirt in the database
     for shirt in listOfShirts:
         description, color, size, quantity = shirt
+
+        # Check if the shirt already exists in the database
         cursor.execute('''
-            INSERT INTO shirts (description, color, size, quantity)
-            VALUES (?, ?, ?, ?)
-        ''', (description, color, size, int(quantity)))
+            SELECT id, quantity FROM shirts
+            WHERE description = ? AND color = ? AND size = ?
+        ''', (description, color, size))
+
+        existing_shirt = cursor.fetchone()
+
+        if existing_shirt:
+            # If the shirt exists, update the quantity
+            new_quantity = existing_shirt['quantity'] + int(quantity)  # Access by column name
+            cursor.execute('''
+                UPDATE shirts
+                SET quantity = ?
+                WHERE id = ?
+            ''', (new_quantity, existing_shirt['id']))
+        else:
+            # If the shirt does not exist, insert a new record
+            cursor.execute('''
+                INSERT INTO shirts (description, color, size, quantity)
+                VALUES (?, ?, ?, ?)
+            ''', (description, color, size, int(quantity)))
 
     # Commit the transaction and close the connection
     conn.commit()
     conn.close()
 
-
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=80, host='0.0.0.0')

@@ -11,12 +11,11 @@ def pdfToListOfShirts(filename):
         page1 = pdf.pages[0]
         text1 = page1.extract_text()
         page1shirts = text1[451:-49]
-        #print(page1shirts)
+
         # clean page 2 data
         page2 = pdf.pages[1]
         text2 = page2.extract_text()
         page2shirts = text2[47:-265]
-        #print(page2shirts)
 
         pg1ShirtLines = page1shirts.split("\n")
         pg2ShirtLines = page2shirts.split("\n")
@@ -29,13 +28,6 @@ def pdfToListOfShirts(filename):
         parts = line.split()
         #The first element is always the ID, so skip it
         descriptionStart = 1
-
-        # Incorporate when things get messy
-        # Known color names to look for
-        knownColors = {"Kelly", "Black", "Graphite", "Royal"}
-
-        # Known size patterns to look for
-        knownSizes = {"S", "M", "L", "XL", "One", "Adjustable", "5T"}
 
         # Find where description ends (the second hyphen)
         descriptionEnd = 0
@@ -57,5 +49,8 @@ def pdfToListOfShirts(filename):
 
         currentList = [description, color, size, quantity]
         entireList.append(currentList)
+        print(currentList)
 
     return entireList
+
+pdfToListOfShirts('invoice.pdf')
