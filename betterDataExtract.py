@@ -32,33 +32,68 @@ def getAllLinesFromPDF(file):
         return allLines
 
 # args: lines - lines from pdf as each line is an element in a list i.e. [[line1],[line2],[line3]]
-def extractPartsOfLines(lines):
+# returns: list of lists, where each list is a row from the table, with just the brand, description, color, size, and quanity 
+def extractTableContent(lines):
+
+    pdfTable = []
 
     # loops through list of lines given - line becomes an element in the list i.e. a single list that is a line
     for line in lines:
 
         # splits lines into elements of a list - ie. ['itemnumber', 'brand', 'color']
-        parts = line.split()
+        partsOfLine = line.split()
 
         # part of checking if a line is a shirt - item code is always the first element
-        itemCode = parts[0]
+        itemCode = partsOfLine[0]
         
         # checks if line is a shirt, by checking if item code is there (8 numerical digits)
-        if len(itemCode) == 8 and itemCode.isdigit():
+        if len(itemCode) == 8 and itemCode.isdigit(): # this is now each individual line
 
+
+            """BRAND"""
             # get brand from list of elements - brand will always start at index 1, end at index before the hyphen
             # Find the index of the first hyphen
-            index_of_hyphen = parts.index('-')
+
+            indexOfFirstHyphen = partsOfLine.index('-')
 
             # Extract the brand (from index 1 to the index before the hyphen)
-            brand = ' '.join(parts[1:index_of_hyphen])
+            brand = ' '.join(partsOfLine[1:indexOfFirstHyphen])
+
+
+            """DESCRIPTION"""
+            # Find the index of the second hyphen
+            indexOfSecondHyphen = partsOfLine.index('-', indexOfFirstHyphen + 1)
+
+            # Extract the description (from the index after the first hyphen to the index before the second hyphen)
+            description = ' '.join(partsOfLine[indexOfFirstHyphen + 1:indexOfSecondHyphen])
 
 
 
+            """COLOR"""
+            # check for parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha
+            # if not not parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha, then check for parts[-6].isAlpha, and parts[-5].isAlpha
+            # if not parts[-6].isAlpha, and parts[-5].isAlpha then parts[-5] is the color, and the color is only one word
+            # Check if parts[-7], parts[-6], and parts[-5] are alphabetic
+            if partsOfLine[-7].isalpha() and partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
+                # Color is multi-word (e.g., "Solid Black Blend")
+                color = ' '.join(partsOfLine[-7:-4])  # Adjust indices as needed
+            elif partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
+                # Color is two words (e.g., "Light Blue")
+                color = ' '.join(partsOfLine[-6:-4])  # Adjust indices as needed
+            elif partsOfLine[-5].isalpha():
+                # Color is a single word (e.g., "Kelly")
+                color = partsOfLine[-5]
+            else:
+                # Handle cases where no valid color is found
+                color = "No Color Found"
 
+            """Size"""
+            size = partsOfLine[-4]
 
+            """Quantity"""
+            quantity = partsOfLine[-3]
 
+            listOfNewTableContent = [brand, description, color, size, quantity]
+            pdfTable.append(listOfNewTableContent)
 
-# Example usage
-lines = getAllLinesFromPDF('invoices/invoice.pdf')
-extractPartsOfLines(lines)
+    return pdfTable

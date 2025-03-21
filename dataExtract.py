@@ -65,10 +65,9 @@ def pdfToListOfShirts(filename):
 
 
         currentList = [description, color, size, quantity]
-        entireList.append(currentList)
-
+        
         #print(currentList)
 
     return entireList
 
-pdfToListOfShirts('invoice.pdf')
+pdfToListOfShirts('invoices/invoice2.pdf')

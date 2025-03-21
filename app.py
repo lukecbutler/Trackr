@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect
-from dataExtract import pdfToListOfShirts
+from betterDataExtract import getAllLinesFromPDF, extractTableContent
 import sqlite3
 
 app = Flask(__name__)
@@ -43,19 +43,23 @@ def upload():
     file = request.files['file']
     file.save(file.filename)
     
-    # Get this list into a database
-    listOfShirts = pdfToListOfShirts(file.filename)
-    shirtsToDatabase(listOfShirts)
+    # get lines of data from the pdf
+    allLines = getAllLinesFromPDF(file.filename)
+
+    # clean the lines of shirts & return needed data
+    pdfTableData = extractTableContent(allLines)
+
+    shirtsToDatabase(pdfTableData)
     return redirect("/")
 
-def shirtsToDatabase(listOfShirts):
+def shirtsToDatabase(pdfTableData):
     # Connect to the SQLite database using the connection function
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Insert or update each shirt in the database
-    for shirt in listOfShirts:
-        description, color, size, quantity = shirt
+    for shirt in pdfTableData:
+        brand, description, color, size, quantity = shirt
 
         # Check if the shirt already exists in the database
         cursor.execute('''
@@ -76,9 +80,9 @@ def shirtsToDatabase(listOfShirts):
         else:
             # If the shirt does not exist, insert a new record
             cursor.execute('''
-                INSERT INTO shirts (description, color, size, quantity)
+                INSERT INTO shirts (brand, description, color, size, quantity)
                 VALUES (?, ?, ?, ?)
-            ''', (description, color, size, int(quantity)))
+            ''', (brand, description, color, size, int(quantity)))
 
     # Commit the transaction and close the connection
     conn.commit()
