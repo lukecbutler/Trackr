@@ -30,7 +30,7 @@ def home():
 
     # Pull data from database - set as shirts variable
     shirts = cursor.execute('''
-        SELECT description, color, size, quantity FROM shirts;
+        SELECT brand, description, color, size, quantity FROM shirts;
     ''').fetchall()
 
     conn.close()
@@ -81,7 +81,7 @@ def shirtsToDatabase(pdfTableData):
             # If the shirt does not exist, insert a new record
             cursor.execute('''
                 INSERT INTO shirts (brand, description, color, size, quantity)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
             ''', (brand, description, color, size, int(quantity)))
 
     # Commit the transaction and close the connection
