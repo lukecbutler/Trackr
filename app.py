@@ -36,6 +36,7 @@ def home():
     conn.close()
     return render_template("index.html", shirts=shirts)
 
+
 # How to upload a file
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -45,7 +46,6 @@ def upload():
     # Get this list into a database
     listOfShirts = pdfToListOfShirts(file.filename)
     shirtsToDatabase(listOfShirts)
-    print(listOfShirts)
     return redirect("/")
 
 def shirtsToDatabase(listOfShirts):
