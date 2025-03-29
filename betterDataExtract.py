@@ -31,69 +31,74 @@ def getAllLinesFromPDF(file):
         # Return the combined list of lines from all pages
         return allLines
 
+
+
+
 # args: lines - lines from pdf as each line is an element in a list i.e. [[line1],[line2],[line3]]
 # returns: list of lists, where each list is a row from the table, with just the brand, description, color, size, and quanity 
 def extractTableContent(lines):
-
     pdfTable = []
 
-    # loops through list of lines given - line becomes an element in the list i.e. a single list that is a line
     for line in lines:
 
-        # splits lines into elements of a list - ie. ['itemnumber', 'brand', 'color']
         partsOfLine = line.split()
+        if not partsOfLine:  # Skip empty lines
+            continue
+            
+        try:
+            itemCode = partsOfLine[0]
 
-        # part of checking if a line is a shirt - item code is always the first element
-        itemCode = partsOfLine[0]
-        
-        # checks if line is a shirt, by checking if item code is there (8 numerical digits)
-        if len(itemCode) == 8 and itemCode.isdigit(): # this is now each individual line
+            # checks if line is a shirt, by checking if item code is there (8 numerical digits)
+            if len(itemCode) == 8 and itemCode.isdigit():
+                """BRAND"""
+                # Find the index of the first hyphen
+                try:
+                    indexOfFirstHyphen = partsOfLine.index('-')
+                except ValueError as e:
+                    print(f"Could not find first hyphen in line: {line}")
+                    continue
+                
+                # Extract the brand (from index 1 to the index before the hyphen)
+                brand = ' '.join(partsOfLine[1:indexOfFirstHyphen])
 
+                """DESCRIPTION"""
+                # Find the index of the second hyphen
+                try:
+                    indexOfSecondHyphen = partsOfLine.index('-', indexOfFirstHyphen + 1)
+                except ValueError as e:
+                    print(f"Could not find second hyphen in line: {line}")
+                    continue
+                
+                # Extract the description
+                description = ' '.join(partsOfLine[indexOfFirstHyphen + 1:indexOfSecondHyphen])
 
-            """BRAND"""
-            # get brand from list of elements - brand will always start at index 1, end at index before the hyphen
-            # Find the index of the first hyphen
-
-            indexOfFirstHyphen = partsOfLine.index('-')
-
-            # Extract the brand (from index 1 to the index before the hyphen)
-            brand = ' '.join(partsOfLine[1:indexOfFirstHyphen])
-
-
-            """DESCRIPTION"""
-            # Find the index of the second hyphen
-            indexOfSecondHyphen = partsOfLine.index('-', indexOfFirstHyphen + 1)
-
-            # Extract the description (from the index after the first hyphen to the index before the second hyphen)
-            description = ' '.join(partsOfLine[indexOfFirstHyphen + 1:indexOfSecondHyphen])
-
-
-
-            """COLOR"""
-            # check for parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha
-            # if not not parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha, then check for parts[-6].isAlpha, and parts[-5].isAlpha
-            # if not parts[-6].isAlpha, and parts[-5].isAlpha then parts[-5] is the color, and the color is only one word
-            # Check if parts[-7], parts[-6], and parts[-5] are alphabetic
-            if partsOfLine[-7].isalpha() and partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
-                # Color is multi-word (e.g., "Solid Black Blend")
-                color = ' '.join(partsOfLine[-7:-4])  # Adjust indices as needed
-            elif partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
-                # Color is two words (e.g., "Light Blue")
-                color = ' '.join(partsOfLine[-6:-4])  # Adjust indices as needed
-            elif partsOfLine[-5].isalpha():
-                # Color is a single word (e.g., "Kelly")
-                color = partsOfLine[-5]
-            else:
-                # Handle cases where no valid color is found
+                """COLOR"""
                 color = "No Color Found"
+                # Check different possible positions for color
+                if len(partsOfLine) >= 7 and partsOfLine[-7].isalpha() and partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
+                    color = ' '.join(partsOfLine[-7:-4])
+                elif len(partsOfLine) >= 6 and partsOfLine[-6].isalpha() and partsOfLine[-5].isalpha():
+                    color = ' '.join(partsOfLine[-6:-4])
+                elif len(partsOfLine) >= 5 and partsOfLine[-5].isalpha():
+                    color = partsOfLine[-5]
+                else:
+                    print(f"Could not determine color in line: {line}")
 
-            """Size"""
-            size = partsOfLine[-4]
+                """Size"""
+                size = partsOfLine[-4] if len(partsOfLine) >= 4 else "Unknown"
 
-            """Quantity"""
-            quantity = partsOfLine[-3]
+                """Quantity"""
+                quantity = partsOfLine[-3] if len(partsOfLine) >= 3 else "Unknown"
 
-            listOfNewTableContent = [brand, description, color, size, quantity]
-            pdfTable.append(listOfNewTableContent)
+                listOfNewTableContent = [brand, description, color, size, quantity]
+                pdfTable.append(listOfNewTableContent)
+       
+        except Exception as e:
+            print(f"Error processing line: {line}")
+            print(f"Error details: {str(e)}")
+            continue
 
     return pdfTable
+
+lines = getAllLinesFromPDF('invoices/invoice2.pdf')
+extractTableContent(lines)

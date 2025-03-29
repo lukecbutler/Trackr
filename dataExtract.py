@@ -24,50 +24,9 @@ def pdfToListOfShirts(filename):
         pg1ShirtLines = page1shirts.split("\n")
         pg2ShirtLines = page2shirts.split("\n")
         allLines = pg1ShirtLines + pg2ShirtLines
+        return allLines
 
 
-    # create list that will hold the rows of information once cleaned
-    entireList = []
-
-##################################################################################################################################################
-    for i in allLines:
-        line = i
-
-        # each line is split into the different string of characters
-        parts = line.split()
-
-        #The first element is always the ID, so skip it
-        descriptionStart = 1
-        print(parts)
-
-        # Find where description ends (the second hyphen)
-        descriptionEnd = 0
-        counter = 0
-        for i in range(1, len(parts)):
-            if parts[i] == "-":
-                counter += 1
-                if counter == 2:
-                    descriptionEnd = i
-                    break
-                continue
-        #extract the description
-        description = " ".join(parts[descriptionStart:descriptionEnd])
-
-
-
-        # check for parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha
-        # if not not parts[-7].isAlpha, parts[-6].isAlpha, and parts[-5].isAlpha, then check for parts[-6].isAlpha, and parts[-5].isAlpha
-        # if not parts[-6].isAlpha, and parts[-5].isAlpha then parts[-5] is the color, and the color is only one word
-        color = parts[-5]
-        size = parts[-4]
-        quantity = parts[-3]
-        
-
-
-        currentList = [description, color, size, quantity]
-        
-        #print(currentList)
-
-    return entireList
-
-pdfToListOfShirts('invoices/invoice2.pdf')
+lines = pdfToListOfShirts('invoices/invoice2.pdf')
+for line in lines:
+    print(line)
