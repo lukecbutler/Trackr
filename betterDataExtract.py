@@ -99,6 +99,3 @@ def extractTableContent(lines):
             continue
 
     return pdfTable
-
-lines = getAllLinesFromPDF('invoices/invoice2.pdf')
-extractTableContent(lines)
