@@ -1,23 +1,36 @@
-from flask import Flask, request, render_template, redirect, jsonify
+from flask import Flask, request, render_template, redirect, jsonify, flash
 from betterDataExtract import getAllLinesFromPDF, extractTableContent
 import sqlite3
+import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Required for flash messages
 
 # Database connection
 DATABASE = "shirts.db"
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+# Create uploads folder if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # Enable dictionary-like access
     return conn
 
-@app.route('/', methods=['GET'])
-def home():
+def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Create the table if it doesn't exist
+    
+    # Create the shirts table with indexes
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS shirts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,15 +38,47 @@ def home():
             description TEXT NOT NULL,
             color TEXT NOT NULL,
             size TEXT NOT NULL,
-            quantity INTEGER
+            quantity INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Create indexes for frequently queried columns
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_brand ON shirts(brand)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_description ON shirts(description)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_color ON shirts(color)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_size ON shirts(size)')
+    
+    # Create audit trail table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_audit (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            shirt_id INTEGER,
+            old_quantity INTEGER,
+            new_quantity INTEGER,
+            change_type TEXT,
+            changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (shirt_id) REFERENCES shirts(id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
 
+@app.route('/', methods=['GET'])
+def home():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Initialize database if needed
+    init_db()
+    
     # Pull data from database - set as shirts variable
     shirts = cursor.execute('''
         SELECT id, brand, description, color, size, quantity FROM shirts;
     ''').fetchall()
-
+    
     conn.close()
     return render_template("index.html", shirts=shirts)
 
@@ -45,41 +90,84 @@ def update_quantity():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get current quantity
-    cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
-    current_quantity = cursor.fetchone()['quantity']
-    
-    # Update based on action
-    if action == 'increment':
-        new_quantity = current_quantity + 1
-    elif action == 'decrement':
-        new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
-    
-    # Update database
-    cursor.execute('''
-        UPDATE shirts
-        SET quantity = ?
-        WHERE id = ?
-    ''', (new_quantity, shirt_id))
-    
-    conn.commit()
-    conn.close()
+    try:
+        # Get current quantity
+        cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
+        current_quantity = cursor.fetchone()['quantity']
+        
+        # Update based on action
+        if action == 'increment':
+            new_quantity = current_quantity + 1
+        elif action == 'decrement':
+            new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
+        
+        if new_quantity == 0:
+            # Delete the shirt if quantity reaches 0
+            cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
+            flash('Shirt removed from inventory', 'success')
+        else:
+            # Update quantity if not zero
+            cursor.execute('''
+                UPDATE shirts
+                SET quantity = ?
+                WHERE id = ?
+            ''', (new_quantity, shirt_id))
+            flash('Quantity updated successfully', 'success')
+        
+        # Record the change in audit trail
+        cursor.execute('''
+            INSERT INTO inventory_audit (shirt_id, old_quantity, new_quantity, change_type)
+            VALUES (?, ?, ?, ?)
+        ''', (shirt_id, current_quantity, new_quantity, action))
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f'Error updating quantity: {str(e)}', 'error')
+    finally:
+        conn.close()
     
     return redirect("/")
 
-
 @app.route('/upload', methods=['POST'])
 def upload():
-    file = request.files['file']
-    file.save(file.filename)
+    if 'file' not in request.files:
+        flash('No file part', 'error')
+        return redirect("/")
     
-    # get lines of data from the pdf
-    allLines = getAllLinesFromPDF(file.filename)
-
-    # clean the lines of shirts & return needed data
-    pdfTableData = extractTableContent(allLines)
-
-    shirtsToDatabase(pdfTableData)
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect("/")
+    
+    if not allowed_file(file.filename):
+        flash('Invalid file type. Please upload a PDF file.', 'error')
+        return redirect("/")
+    
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        
+        # get lines of data from the pdf
+        allLines = getAllLinesFromPDF(filepath)
+        
+        # clean the lines of shirts & return needed data
+        pdfTableData = extractTableContent(allLines)
+        
+        if not pdfTableData:
+            flash('No valid data found in the PDF', 'error')
+            return redirect("/")
+        
+        shirtsToDatabase(pdfTableData)
+        flash('File successfully processed and data imported', 'success')
+        
+        # Clean up the uploaded file
+        os.remove(filepath)
+        
+    except Exception as e:
+        flash(f'Error processing file: {str(e)}', 'error')
+        return redirect("/")
+    
     return redirect("/")
 
 def shirtsToDatabase(pdfTableData):
@@ -117,6 +205,63 @@ def shirtsToDatabase(pdfTableData):
     # Commit the transaction and close the connection
     conn.commit()
     conn.close()
+
+@app.route('/edit_shirt/<int:shirt_id>', methods=['GET', 'POST'])
+def edit_shirt(shirt_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        try:
+            brand = request.form['brand']
+            description = request.form['description']
+            color = request.form['color']
+            size = request.form['size']
+            quantity = request.form['quantity']
+            
+            # Get current quantity for audit trail
+            cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
+            current_quantity = cursor.fetchone()['quantity']
+            
+            # Update shirt details
+            cursor.execute('''
+                UPDATE shirts
+                SET brand = ?, description = ?, color = ?, size = ?, quantity = ?
+                WHERE id = ?
+            ''', (brand, description, color, size, quantity, shirt_id))
+            
+            # Record the change in audit trail if quantity changed
+            if int(quantity) != current_quantity:
+                cursor.execute('''
+                    INSERT INTO inventory_audit (shirt_id, old_quantity, new_quantity, change_type)
+                    VALUES (?, ?, ?, ?)
+                ''', (shirt_id, current_quantity, quantity, 'edit'))
+            
+            conn.commit()
+            flash('Shirt details updated successfully', 'success')
+        except Exception as e:
+            conn.rollback()
+            flash(f'Error updating shirt: {str(e)}', 'error')
+        finally:
+            conn.close()
+        return redirect('/')
+    
+    # GET request - fetch shirt details
+    shirt = cursor.execute('SELECT * FROM shirts WHERE id = ?', (shirt_id,)).fetchone()
+    conn.close()
+    
+    if shirt is None:
+        flash('Shirt not found', 'error')
+        return redirect('/')
+    
+    return jsonify({
+        'id': shirt['id'],
+        'brand': shirt['brand'],
+        'description': shirt['description'],
+        'color': shirt['color'],
+        'size': shirt['size'],
+        'quantity': shirt['quantity']
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, port=80, host='0.0.0.0')
