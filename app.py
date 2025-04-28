@@ -44,12 +44,6 @@ def init_db():
         )
     ''')
     
-    # Create indexes for frequently queried columns
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_brand ON shirts(brand)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_description ON shirts(description)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_color ON shirts(color)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_shirts_size ON shirts(size)')
-    
     # Create audit trail table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inventory_audit (
