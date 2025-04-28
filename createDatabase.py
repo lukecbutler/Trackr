@@ -15,3 +15,5 @@ CREATE TABLE IF NOT EXISTS shirts (
     quantity INTEGER
 );
 ''')
+conn.commit()
+conn.close()
