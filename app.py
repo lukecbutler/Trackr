@@ -1,10 +1,12 @@
-from flask import Flask, request, render_template, redirect, jsonify, flash
+from flask import Flask, request, render_template, redirect, jsonify, flash, session, url_for
 from betterDataExtract import getAllLinesFromPDF, extractTableContent
 import sqlite3
 import os
+import hashlib
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Required for flash messages
+app.secret_key = 'your-secret-key'  # Change this to a secure secret key
 
 # Database connection
 DATABASE = "shirts.db"
@@ -66,23 +68,70 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.route('/', methods=['GET'])
-def home():
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/')
+@login_required
+def index():
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Initialize database if needed
-    init_db()
-    
-    # Pull data from database - set as shirts variable
-    shirts = cursor.execute('''
-        SELECT id, brand, description, color, size, quantity FROM shirts;
-    ''').fetchall()
-    
+    shirts = conn.execute('SELECT * FROM shirts WHERE user_id = ?', (session['user_id'],)).fetchall()
     conn.close()
-    return render_template("index.html", shirts=shirts)
+    return render_template('index.html', shirts=shirts)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = hashlib.sha256(request.form['password'].encode()).hexdigest()
+        
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE username = ? AND password = ?',
+                          (username, password)).fetchone()
+        conn.close()
+        
+        if user:
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = hashlib.sha256(request.form['password'].encode()).hexdigest()
+        
+        conn = get_db_connection()
+        try:
+            conn.execute('INSERT INTO users (username, password) VALUES (?, ?)',
+                        (username, password))
+            conn.commit()
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Username already exists', 'error')
+        finally:
+            conn.close()
+    
+    return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/update_quantity', methods=['POST'])
+@login_required
 def update_quantity():
     shirt_id = request.form['id']
     action = request.form['action']
@@ -92,8 +141,13 @@ def update_quantity():
     
     try:
         # Get current quantity
-        cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
-        current_quantity = cursor.fetchone()['quantity']
+        cursor.execute('SELECT quantity FROM shirts WHERE id = ? AND user_id = ?', (shirt_id, session['user_id']))
+        shirt = cursor.fetchone()
+        
+        if not shirt:
+            return jsonify({'message': 'Shirt not found'}), 404
+        
+        current_quantity = shirt['quantity']
         
         # Update based on action
         if action == 'increment':
@@ -103,62 +157,88 @@ def update_quantity():
         
         if new_quantity == 0:
             # Delete the shirt if quantity reaches 0
-            cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
-            flash('Shirt removed from inventory', 'success')
+            cursor.execute('DELETE FROM shirts WHERE id = ? AND user_id = ?', (shirt_id, session['user_id']))
+            message = 'Shirt removed from inventory'
         else:
             # Update quantity if not zero
             cursor.execute('''
                 UPDATE shirts
                 SET quantity = ?
-                WHERE id = ?
-            ''', (new_quantity, shirt_id))
-            flash('Quantity updated successfully', 'success')
-        
-        # Record the change in audit trail
-        cursor.execute('''
-            INSERT INTO inventory_audit (shirt_id, old_quantity, new_quantity, change_type)
-            VALUES (?, ?, ?, ?)
-        ''', (shirt_id, current_quantity, new_quantity, action))
+                WHERE id = ? AND user_id = ?
+            ''', (new_quantity, shirt_id, session['user_id']))
+            message = 'Quantity updated successfully'
         
         conn.commit()
+        return jsonify({
+            'message': message,
+            'new_quantity': new_quantity
+        })
     except Exception as e:
         conn.rollback()
-        flash(f'Error updating quantity: {str(e)}', 'error')
+        return jsonify({'message': f'Error updating quantity: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+@app.route('/delete_shirt', methods=['POST'])
+@login_required
+def delete_shirt():
+    shirt_id = request.form['id']
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM shirts WHERE id = ? AND user_id = ?', (shirt_id, session['user_id']))
+        conn.commit()
+        flash('Shirt deleted successfully', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'Error deleting shirt: {str(e)}', 'error')
     finally:
         conn.close()
     
-    return redirect("/")
+    return redirect(url_for('index'))
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
     if 'file' not in request.files:
         flash('No file part', 'error')
-        return redirect("/")
+        return redirect(url_for('index'))
     
     file = request.files['file']
     if file.filename == '':
         flash('No selected file', 'error')
-        return redirect("/")
+        return redirect(url_for('index'))
     
     if not allowed_file(file.filename):
         flash('Invalid file type. Please upload a PDF file.', 'error')
-        return redirect("/")
+        return redirect(url_for('index'))
     
     try:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
         
-        # get lines of data from the pdf
+        # Get lines of data from the PDF
         allLines = getAllLinesFromPDF(filepath)
         
-        # clean the lines of shirts & return needed data
+        # Clean the lines of shirts & return needed data
         pdfTableData = extractTableContent(allLines)
         
         if not pdfTableData:
             flash('No valid data found in the PDF', 'error')
-            return redirect("/")
+            return redirect(url_for('index'))
         
-        shirtsToDatabase(pdfTableData)
+        # Add shirts to database with user_id
+        conn = get_db_connection()
+        for shirt in pdfTableData:
+            brand, description, color, size, quantity = shirt
+            conn.execute('''
+                INSERT INTO shirts (brand, description, color, size, quantity, user_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (brand, description, color, size, int(quantity), session['user_id']))
+        
+        conn.commit()
+        conn.close()
+        
         flash('File successfully processed and data imported', 'success')
         
         # Clean up the uploaded file
@@ -166,45 +246,8 @@ def upload():
         
     except Exception as e:
         flash(f'Error processing file: {str(e)}', 'error')
-        return redirect("/")
     
-    return redirect("/")
-
-def shirtsToDatabase(pdfTableData):
-    # Connect to the SQLite database using the connection function
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Insert or update each shirt in the database
-    for shirt in pdfTableData:
-        brand, description, color, size, quantity = shirt
-
-        # Check if the shirt already exists in the database
-        cursor.execute('''
-            SELECT id, quantity FROM shirts
-            WHERE description = ? AND color = ? AND size = ?
-        ''', (description, color, size))
-
-        existing_shirt = cursor.fetchone()
-
-        if existing_shirt:
-            # If the shirt exists, update the quantity
-            new_quantity = existing_shirt['quantity'] + int(quantity)  # Access by column name
-            cursor.execute('''
-                UPDATE shirts
-                SET quantity = ?
-                WHERE id = ?
-            ''', (new_quantity, existing_shirt['id']))
-        else:
-            # If the shirt does not exist, insert a new record
-            cursor.execute('''
-                INSERT INTO shirts (brand, description, color, size, quantity)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (brand, description, color, size, int(quantity)))
-
-    # Commit the transaction and close the connection
-    conn.commit()
-    conn.close()
+    return redirect(url_for('index'))
 
 @app.route('/edit_shirt/<int:shirt_id>', methods=['GET', 'POST'])
 def edit_shirt(shirt_id):

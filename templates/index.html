@@ -3,211 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trackr - Inventory Management</title>
+    <title>S&S Activewear Shirt Tracker - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-color: #2d3748;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
         }
-        
+
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        
+
         .navbar {
-            background-color: var(--primary-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--primary-gradient);
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .navbar-brand {
             color: white !important;
-            font-weight: bold;
             font-size: 1.5rem;
+            font-weight: 600;
         }
-        
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
         .card {
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-header {
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 10px 10px 0 0 !important;
-        }
-        
-        .btn-primary {
-            background-color: var(--secondary-color);
-            border: none;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .quantity-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .quantity-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .upload-section {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            background: white;
             margin-bottom: 2rem;
         }
-        
-        .alert {
-            border-radius: 10px;
-            margin-bottom: 1rem;
+
+        .card-header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 15px 15px 0 0 !important;
         }
-        
+
+        .card-header h3 {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--light-bg);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
         .table {
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
+            margin: 0;
         }
-        
+
         .table thead th {
-            background-color: var(--primary-color);
-            color: white;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--light-bg);
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1rem;
             border: none;
         }
-        
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
+
+        .alert-success {
+            background-color: #f0fdf4;
+            color: #166534;
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            color: #991b1b;
+        }
+
+        .stats-card {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-card h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
         }
     </style>
+    <script>
+        function updateQuantity(shirtId, action) {
+            $.ajax({
+                url: '/update_quantity',
+                method: 'POST',
+                data: {
+                    id: shirtId,
+                    action: action
+                },
+                success: function(response) {
+                    // Update the quantity display
+                    const quantityElement = $(`#quantity-${shirtId}`);
+                    const newQuantity = response.new_quantity;
+                    
+                    if (newQuantity === 0) {
+                        // Remove the entire row if quantity is 0
+                        $(`#shirt-${shirtId}`).fadeOut(300, function() {
+                            $(this).remove();
+                            // Update total shirts count
+                            updateTotalShirts(-1);
+                            // Update total quantity (we'll subtract the last known quantity)
+                            updateTotalQuantity(-quantityElement.text());
+                        });
+                    } else {
+                        // Calculate the difference in quantity
+                        const oldQuantity = parseInt(quantityElement.text());
+                        const diff = newQuantity - oldQuantity;
+                        
+                        // Update the quantity number
+                        quantityElement.text(newQuantity);
+                        
+                        // Update total quantity if it changed
+                        if (diff !== 0) {
+                            updateTotalQuantity(diff);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    // Show error message
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ${xhr.responseJSON.message || 'Error updating quantity'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    $('.alert').remove();
+                    $('.main-container').prepend(alertHtml);
+                }
+            });
+        }
+    
+        // Helper function to update total shirts count
+        function updateTotalShirts(change) {
+            const totalShirtsElement = $('.stats-card h4:contains("Total Types of Shirts")').siblings('p');
+            const currentTotal = parseInt(totalShirtsElement.text());
+            totalShirtsElement.text(currentTotal + change);
+        }
+    
+        // Helper function to update total quantity
+        function updateTotalQuantity(change) {
+            const totalQuantityElement = $('.stats-card h4:contains("Total Quantity")').siblings('p');
+            const currentTotal = parseInt(totalQuantityElement.text());
+            totalQuantityElement.text(currentTotal + change);
+        }
+    </script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <nav class="navbar">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-tshirt me-2"></i>Trackr
+                <i class="fas fa-tshirt me-2"></i>S&S Activewear Shirt Tracker
             </a>
+            <div class="ms-auto">
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container main-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <!-- Edit Modal -->
-        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Shirt Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="editForm" method="POST">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="brand" class="form-label">Brand</label>
-                                <input type="text" class="form-control" id="brand" name="brand" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <input type="text" class="form-control" id="description" name="description" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="color" class="form-label">Color</label>
-                                <input type="text" class="form-control" id="color" name="color" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="size" class="form-label">Size</label>
-                                <input type="text" class="form-control" id="size" name="size" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" required min="0">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="stats-card">
+                    <h4>Total Types of Shirts</h4>
+                    <p>{{ shirts|length }}</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Confirmation Modal -->
-        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="confirmMessage"></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
-                    </div>
+            <div class="col-md-6">
+                <div class="stats-card">
+                    <h4>Total Quantity</h4>
+                    <p>{{ shirts|sum(attribute='quantity') }}</p>
                 </div>
             </div>
-        </div>
-
-        <div class="upload-section">
-            <h2 class="mb-4">Upload Inventory</h2>
-            <form action="/upload" method="post" enctype="multipart/form-data" class="row g-3">
-                <div class="col-md-8">
-                    <input type="file" class="form-control" name="file" accept=".pdf" required>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-upload me-2"></i>Upload PDF
-                    </button>
-                </div>
-            </form>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">Current Inventory</h3>
+                <h3>Upload Inventory</h3>
+            </div>
+            <div class="card-body">
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-8">
+                            <input type="file" class="form-control" name="file" accept=".pdf" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-upload me-2"></i>Upload PDF
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Current Inventory</h3>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>Brand</th>
@@ -220,42 +315,29 @@
                         </thead>
                         <tbody>
                             {% for shirt in shirts %}
-                            <tr>
+                            <tr id="shirt-{{ shirt['id'] }}">
                                 <td>{{ shirt['brand'] }}</td>
                                 <td>{{ shirt['description'] }}</td>
                                 <td>{{ shirt['color'] }}</td>
                                 <td>{{ shirt['size'] }}</td>
                                 <td>
-                                    <div class="quantity-control">
-                                        <form action="/update_quantity" method="post" class="d-inline quantity-form">
-                                            <input type="hidden" name="id" value="{{ shirt['id'] }}">
-                                            <input type="hidden" name="action" value="decrement">
-                                            <button type="button" class="quantity-btn btn btn-outline-danger decrement-btn" 
-                                                    data-shirt-id="{{ shirt['id'] }}"
-                                                    data-shirt-desc="{{ shirt['description'] }}"
-                                                    data-current-qty="{{ shirt['quantity'] }}">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                        </form>
-                                        <span class="quantity">{{ shirt['quantity'] }}</span>
-                                        <form action="/update_quantity" method="post" class="d-inline quantity-form">
-                                            <input type="hidden" name="id" value="{{ shirt['id'] }}">
-                                            <input type="hidden" name="action" value="increment">
-                                            <button type="button" class="quantity-btn btn btn-outline-success increment-btn"
-                                                    data-shirt-id="{{ shirt['id'] }}"
-                                                    data-shirt-desc="{{ shirt['description'] }}"
-                                                    data-current-qty="{{ shirt['quantity'] }}">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </form>
+                                    <div class="d-flex align-items-center">
+                                        <button onclick="updateQuantity({{ shirt['id'] }}, 'decrement')" class="btn btn-sm btn-outline-danger me-2">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <span id="quantity-{{ shirt['id'] }}" class="mx-2">{{ shirt['quantity'] }}</span>
+                                        <button onclick="updateQuantity({{ shirt['id'] }}, 'increment')" class="btn btn-sm btn-outline-success ms-2">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
                                     </div>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary edit-btn" 
-                                            data-shirt-id="{{ shirt['id'] }}"
-                                            data-shirt-desc="{{ shirt['description'] }}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                    <form action="/delete_shirt" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="{{ shirt['id'] }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this shirt?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -265,103 +347,5 @@
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-dismiss alerts after 5 seconds
-        window.setTimeout(function() {
-            document.querySelectorAll('.alert').forEach(function(alert) {
-                new bootstrap.Alert(alert).close();
-            });
-        }, 5000);
-
-        // Confirmation modal setup
-        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-        let pendingForm = null;
-
-        function showConfirmation(message, form) {
-            document.getElementById('confirmMessage').textContent = message;
-            pendingForm = form;
-            confirmModal.show();
-        }
-
-        document.getElementById('confirmAction').addEventListener('click', function() {
-            if (pendingForm) {
-                pendingForm.submit();
-            }
-            confirmModal.hide();
-        });
-
-        // Quantity update handlers
-        document.querySelectorAll('.decrement-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const shirtId = this.dataset.shirtId;
-                const description = this.dataset.shirtDesc;
-                const currentQty = parseInt(this.dataset.currentQty);
-                const form = this.closest('form');
-                
-                if (currentQty === 1) {
-                    showConfirmation(`Are you sure you want to remove "${description}" from inventory?`, form);
-                } else {
-                    showConfirmation(`Are you sure you want to decrease the quantity of "${description}" from ${currentQty} to ${currentQty - 1}?`, form);
-                }
-            });
-        });
-
-        document.querySelectorAll('.increment-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const shirtId = this.dataset.shirtId;
-                const description = this.dataset.shirtDesc;
-                const currentQty = parseInt(this.dataset.currentQty);
-                const form = this.closest('form');
-                
-                showConfirmation(`Are you sure you want to increase the quantity of "${description}" from ${currentQty} to ${currentQty + 1}?`, form);
-            });
-        });
-
-        // Edit button functionality
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const shirtId = this.dataset.shirtId;
-                const description = this.dataset.shirtDesc;
-                const modal = new bootstrap.Modal(document.getElementById('editModal'));
-                
-                // Fetch shirt details
-                fetch(`/edit_shirt/${shirtId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('brand').value = data.brand;
-                        document.getElementById('description').value = data.description;
-                        document.getElementById('color').value = data.color;
-                        document.getElementById('size').value = data.size;
-                        document.getElementById('quantity').value = data.quantity;
-                        
-                        // Update form action
-                        document.getElementById('editForm').action = `/edit_shirt/${shirtId}`;
-                        
-                        // Show modal
-                        modal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error fetching shirt details');
-                    });
-            });
-        });
-
-        // Edit form submission handler
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const description = document.getElementById('description').value;
-            const currentQty = parseInt(document.getElementById('quantity').value);
-            const oldQty = parseInt(this.dataset.oldQuantity || currentQty);
-            
-            if (currentQty !== oldQty) {
-                showConfirmation(`Are you sure you want to update "${description}" and change its quantity from ${oldQty} to ${currentQty}?`, this);
-            } else {
-                showConfirmation(`Are you sure you want to update the details of "${description}"?`, this);
-            }
-        });
-    </script>
 </body>
 </html>
