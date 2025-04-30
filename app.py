@@ -41,8 +41,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            password TEXT NOT NULL
         )
     ''')
 
@@ -55,8 +54,6 @@ def init_db():
             size TEXT NOT NULL,
             quantity INTEGER,
             user_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     ''')
@@ -101,7 +98,6 @@ def register():
         try:
             conn.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
             conn.commit()
-            flash("Registration successful! Please log in.", "success")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("Username already exists!", "error")
@@ -133,13 +129,16 @@ def upload():
 
     file = request.files.get("file")
 
+    # if there is no file flask No file selected & redirect to home
     if not file or file.filename == "":
         flash("No file selected.", "error")
         return redirect(url_for("home"))
 
+    # if any other file type than a pdf is uploaded flash the error & redirect to home
     if not allowed_file(file.filename):
         flash("Invalid file type. Only PDF files are allowed.", "error")
         return redirect(url_for("home"))
+
 
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(filepath)
