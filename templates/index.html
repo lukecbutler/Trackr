@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trackr - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .upload-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .table {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-tshirt me-2"></i>Trackr
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Shirt Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="editForm" method="POST">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="brand" class="form-label">Brand</label>
+                                <input type="text" class="form-control" id="brand" name="brand" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <input type="text" class="form-control" id="description" name="description" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="color" class="form-label">Color</label>
+                                <input type="text" class="form-control" id="color" name="color" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="size" class="form-label">Size</label>
+                                <input type="text" class="form-control" id="size" name="size" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" required min="0">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirmMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h2 class="mb-4">Upload Inventory</h2>
+            <form action="/upload" method="post" enctype="multipart/form-data" class="row g-3">
+                <div class="col-md-8">
+                    <input type="file" class="form-control" name="file" accept=".pdf" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-upload me-2"></i>Upload PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Current Inventory</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>Description</th>
+                                <th>Color</th>
+                                <th>Size</th>
+                                <th>Quantity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for shirt in shirts %}
+                            <tr>
+                                <td>{{ shirt['brand'] }}</td>
+                                <td>{{ shirt['description'] }}</td>
+                                <td>{{ shirt['color'] }}</td>
+                                <td>{{ shirt['size'] }}</td>
+                                <td>
+                                    <div class="quantity-control">
+                                        <form action="/update_quantity" method="post" class="d-inline quantity-form">
+                                            <input type="hidden" name="id" value="{{ shirt['id'] }}">
+                                            <input type="hidden" name="action" value="decrement">
+                                            <button type="button" class="quantity-btn btn btn-outline-danger decrement-btn" 
+                                                    data-shirt-id="{{ shirt['id'] }}"
+                                                    data-shirt-desc="{{ shirt['description'] }}"
+                                                    data-current-qty="{{ shirt['quantity'] }}">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        </form>
+                                        <span class="quantity">{{ shirt['quantity'] }}</span>
+                                        <form action="/update_quantity" method="post" class="d-inline quantity-form">
+                                            <input type="hidden" name="id" value="{{ shirt['id'] }}">
+                                            <input type="hidden" name="action" value="increment">
+                                            <button type="button" class="quantity-btn btn btn-outline-success increment-btn"
+                                                    data-shirt-id="{{ shirt['id'] }}"
+                                                    data-shirt-desc="{{ shirt['description'] }}"
+                                                    data-current-qty="{{ shirt['quantity'] }}">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn" 
+                                            data-shirt-id="{{ shirt['id'] }}"
+                                            data-shirt-desc="{{ shirt['description'] }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        window.setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                new bootstrap.Alert(alert).close();
+            });
+        }, 5000);
+
+        // Confirmation modal setup
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        let pendingForm = null;
+
+        function showConfirmation(message, form) {
+            document.getElementById('confirmMessage').textContent = message;
+            pendingForm = form;
+            confirmModal.show();
+        }
+
+        document.getElementById('confirmAction').addEventListener('click', function() {
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+            confirmModal.hide();
+        });
+
+        // Quantity update handlers
+        document.querySelectorAll('.decrement-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const shirtId = this.dataset.shirtId;
+                const description = this.dataset.shirtDesc;
+                const currentQty = parseInt(this.dataset.currentQty);
+                const form = this.closest('form');
+                
+                if (currentQty === 1) {
+                    showConfirmation(`Are you sure you want to remove "${description}" from inventory?`, form);
+                } else {
+                    showConfirmation(`Are you sure you want to decrease the quantity of "${description}" from ${currentQty} to ${currentQty - 1}?`, form);
+                }
+            });
+        });
+
+        document.querySelectorAll('.increment-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const shirtId = this.dataset.shirtId;
+                const description = this.dataset.shirtDesc;
+                const currentQty = parseInt(this.dataset.currentQty);
+                const form = this.closest('form');
+                
+                showConfirmation(`Are you sure you want to increase the quantity of "${description}" from ${currentQty} to ${currentQty + 1}?`, form);
+            });
+        });
+
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const shirtId = this.dataset.shirtId;
+                const description = this.dataset.shirtDesc;
+                const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                
+                // Fetch shirt details
+                fetch(`/edit_shirt/${shirtId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('brand').value = data.brand;
+                        document.getElementById('description').value = data.description;
+                        document.getElementById('color').value = data.color;
+                        document.getElementById('size').value = data.size;
+                        document.getElementById('quantity').value = data.quantity;
+                        
+                        // Update form action
+                        document.getElementById('editForm').action = `/edit_shirt/${shirtId}`;
+                        
+                        // Show modal
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error fetching shirt details');
+                    });
+            });
+        });
+
+        // Edit form submission handler
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const description = document.getElementById('description').value;
+            const currentQty = parseInt(document.getElementById('quantity').value);
+            const oldQty = parseInt(this.dataset.oldQuantity || currentQty);
+            
+            if (currentQty !== oldQty) {
+                showConfirmation(`Are you sure you want to update "${description}" and change its quantity from ${oldQty} to ${currentQty}?`, this);
+            } else {
+                showConfirmation(`Are you sure you want to update the details of "${description}"?`, this);
+            }
+        });
+    </script>
+</body>
+</html>
