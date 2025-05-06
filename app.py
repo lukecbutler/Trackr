@@ -17,18 +17,6 @@ def home():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Create the table if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS shirts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            brand TEXT NOT NULL,
-            description TEXT NOT NULL,
-            color TEXT NOT NULL,
-            size TEXT NOT NULL,
-            quantity INTEGER
-        )
-    ''')
-
     # Pull data from database - set as shirts variable
     shirts = cursor.execute('''
         SELECT id, brand, description, color, size, quantity FROM shirts;
@@ -41,30 +29,30 @@ def home():
 def update_quantity():
     shirt_id = request.form['id']
     action = request.form['action']
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # Get current quantity
     cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
     current_quantity = cursor.fetchone()['quantity']
-    
+
     # Update based on action
     if action == 'increment':
         new_quantity = current_quantity + 1
     elif action == 'decrement':
         new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
-    
+
     # Update database
     cursor.execute('''
         UPDATE shirts
         SET quantity = ?
         WHERE id = ?
     ''', (new_quantity, shirt_id))
-    
+
     conn.commit()
     conn.close()
-    
+
     return redirect("/")
 
 
@@ -72,12 +60,14 @@ def update_quantity():
 def upload():
     file = request.files['file']
     file.save(file.filename)
-    
+
     # get lines of data from the pdf
     allLines = getAllLinesFromPDF(file.filename)
 
     # clean the lines of shirts & return needed data
     pdfTableData = extractTableContent(allLines)
+
+    print(pdfTableData)
 
     shirtsToDatabase(pdfTableData)
     return redirect("/")
