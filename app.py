@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, jsonify
+from flask import Flask, request, render_template, redirect
 from betterDataExtract import getAllLinesFromPDF, extractTableContent
 import sqlite3
 
@@ -7,34 +7,51 @@ app = Flask(__name__)
 # Database connection
 DATABASE = "shirts.db"
 
+# get database connection - used throughout program to get db access
+# returns rows as key : value pairs
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # Enable dictionary-like access
     return conn
 
+# home route - code runs when user enters trackr
 @app.route('/', methods=['GET'])
 def home():
+
+    #get db connection & create cursor to run sql queries
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Pull data from database - set as shirts variable
+    # Pull all information that goes into inventory table
+    # returned as SQLite object, ie. shirts[0] is a single sqlite object
+    # shirts[0][1] is the 2nd piece of data from that row 
     shirts = cursor.execute('''
         SELECT id, brand, description, color, size, quantity FROM shirts;
     ''').fetchall()
-
     conn.close()
+
+    # return the index.html with shirts passed in
     return render_template("index.html", shirts=shirts)
 
+# updates quantity of shirt in database, redirects back to single page application
 @app.route('/update_quantity', methods=['POST'])
 def update_quantity():
+
+    # get the shirt key from the database & set it to shirt_id
     shirt_id = request.form['id']
+
+    # pulls action value from button
+    # value of incremnt/decremnt will be set as variable depending on user click
     action = request.form['action']
 
+    # connect to database & create a cursor to run sql queries
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Get current quantity
+    # Get current quantity from shirt db, based on shirt id
     cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
+
+    # set current-quantity to the quantity key
     current_quantity = cursor.fetchone()['quantity']
 
     # Update based on action
@@ -42,6 +59,10 @@ def update_quantity():
         new_quantity = current_quantity + 1
     elif action == 'decrement':
         new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
+        if new_quantity < 1:
+            cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
+
+
 
     # Update database
     cursor.execute('''
