@@ -59,11 +59,12 @@ def update_quantity():
         new_quantity = current_quantity + 1
     elif action == 'decrement':
         new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
+        # delete shirt from database if quantity hits 0
         if new_quantity < 1:
             cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
 
 
-
+    # if shirt quantity is not at 0, update the quantity
     # Update database
     cursor.execute('''
         UPDATE shirts
@@ -71,11 +72,18 @@ def update_quantity():
         WHERE id = ?
     ''', (new_quantity, shirt_id))
 
+    # commit sql queries to database
     conn.commit()
     conn.close()
 
+    # redirect back to the home directory
     return redirect("/")
 
+
+# upload route - takes file, save it to server, 
+# extract shirts from getAllLinesFromPDFf,
+# Get shirts as array of arrays,
+# Add the shirts to the database with shirtsToDatabase function
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -88,10 +96,13 @@ def upload():
     # clean the lines of shirts & return needed data
     pdfTableData = extractTableContent(allLines)
 
+    # ie. [['Comfort Colors', 'Garment-Dyed Heavyweight Long Sleeve T-Shirt', 'Grape', 'M', '1']]
     print(pdfTableData)
 
+    # add the shirts to the database, accepts shirts as array of arrays
     shirtsToDatabase(pdfTableData)
     return redirect("/")
+
 
 def shirtsToDatabase(pdfTableData):
     # Connect to the SQLite database using the connection function
