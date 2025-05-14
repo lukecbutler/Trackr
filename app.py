@@ -140,5 +140,33 @@ def shirtsToDatabase(pdfTableData):
     conn.commit()
     conn.close()
 
+
+@app.route('/manual_shirt_entry', methods = ['GET', 'POST'])
+def manual_shirt_entry():
+    if request.method == 'POST':
+
+        # get db connection & create cursor for sql queries
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # get all shirt data from manual shirt entry web form
+        # the name attribute from the input tag is what the .get is pulling from
+        brand = request.form.get('brand')
+        description = request.form.get('description')
+        color = request.form.get('color')
+        size = request.form.get('size')
+        quantity = request.form.get('quantity')
+
+        # sql query to input shirt into database
+        cursor.execute('''
+            INSERT INTO shirts (brand, description, color, size, quantity)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (brand, description, color, size, int(quantity)))
+
+        conn.commit()
+        conn.close()
+
+        return redirect('/')
+
 if __name__ == "__main__":
     app.run(debug=True, port=80, host='0.0.0.0')
