@@ -5,8 +5,7 @@ def getAllLinesFromPDF(file):
     Extracts all lines of text from a PDF file, page by page, from top to bottom.
 
     Args:
-        file (str): The path to the PDF file.
-
+         file (str): The path to the PDF file.
     Returns:
         list: A list of strings, where each string represents a line of text from the PDF.
               Lines are ordered from top to bottom across all pages.
