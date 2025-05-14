@@ -1,11 +1,15 @@
 from flask import Flask, request, render_template, redirect
 from pdfDataExtraction import getAllLinesFromPDF, extractTableContent
 import sqlite3
+import os
 
 app = Flask(__name__)
 
 # Database connection
 DATABASE = "shirts.db"
+
+# Upload Folder Name
+uploadFolder = 'pdfsStoredOnServer'
 
 # get database connection - used throughout program to get db access
 # returns rows as key : value pairs
@@ -85,10 +89,16 @@ def update_quantity():
 # Get shirts as array of arrays,
 # Add the shirts to the database with shirtsToDatabase function
 
+# makes sure the uploadFolder is created automatically if it doesn't exist.
+os.makedirs(uploadFolder, exist_ok=True)
+
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
-    file.save(file.filename)
+    # os.path.join(...) builds the correct file path for saving on the server
+    filePath = os.path.join(uploadFolder, file.filename)
+    # saves the file to the file path
+    file.save(filePath)
 
     # get lines of data from the pdf
     allLines = getAllLinesFromPDF(file.filename)
@@ -97,7 +107,7 @@ def upload():
     pdfTableData = extractTableContent(allLines)
 
     # ie. [['Comfort Colors', 'Garment-Dyed Heavyweight Long Sleeve T-Shirt', 'Grape', 'M', '1']]
-    print(pdfTableData)
+    # print(pdfTableData)
 
     # add the shirts to the database, accepts shirts as array of arrays
     shirtsToDatabase(pdfTableData)
@@ -139,7 +149,6 @@ def shirtsToDatabase(pdfTableData):
     # Commit the transaction and close the connection
     conn.commit()
     conn.close()
-
 
 @app.route('/manual_shirt_entry', methods = ['GET', 'POST'])
 def manual_shirt_entry():
