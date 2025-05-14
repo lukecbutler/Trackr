@@ -101,7 +101,7 @@ def upload():
     file.save(filePath)
 
     # get lines of data from the pdf
-    allLines = getAllLinesFromPDF(file.filename)
+    allLines = getAllLinesFromPDF(filePath)
 
     # clean the lines of shirts & return needed data
     pdfTableData = extractTableContent(allLines)
