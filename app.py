@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect
-from betterDataExtract import getAllLinesFromPDF, extractTableContent
+from pdfDataExtraction import getAllLinesFromPDF, extractTableContent
 import sqlite3
 
 app = Flask(__name__)
