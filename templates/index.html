@@ -45,7 +45,7 @@
                 <div class="card mx-auto shadow text-center">
 
                     <!-- Main page header for inventory table -->
-                    <h1 class="card-header bg-dark text-white mb-3">T-Shirt Inventory</h1>
+                    <h1 class="card-header bg-dark text-white mb-3">Current Inventory</h1>
 
                     <!-- Bootstrap-styled table to display inventory data -->
                     <!-- table-hover: highlight row on hover -->
@@ -61,7 +61,6 @@
                             <th>Color</th>
                             <th>Size</th>
                             <th>Quantity</th>
-                            <th>Actions</th>
                         </tr>
 
                         <!-- Dynamically generate table rows using Jinja2 loop -->
@@ -73,36 +72,30 @@
                             <td>{{ row[2] }}</td> <!-- Description -->
                             <td>{{ row[3] }}</td> <!-- Color -->
                             <td>{{ row[4] }}</td> <!-- Size -->
-                            <td>{{ row[5] }}</td> <!-- Quantity -->
-
                             <td>
-                                <!-- ==================== Quantity Action Buttons ==================== -->
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    
+                                    <!-- Decrement -->
+                                    <form action="/update_quantity" method="POST">
+                                        <input type="hidden" name="id" value="{{ row[0] }}">
+                                        <input type="hidden" name="action" value="decrement">
+                                        <button type="submit" class="btn btn-sm btn-danger">-</button>
+                                    </form>
 
-                                <!-- Form to increment (add) shirt quantity -->
-                                <!-- Each button is repeated for each shirt that is shown due to the jinja2 syntax -->
-                                <form action="/update_quantity" method="POST" style="display: inline;">
-                                    <!-- Hidden input: Shirt ID from database -->
-                                    <input type="hidden" name="id" value="{{ row[0] }}">
+                                    <!-- Quantity Display (centered number) -->
+                                    <span class="px-2 fw-bold">{{ row[5] }}</span>
 
-                                    <!-- Hidden input: Action type sent to server -->
-                                    <input type="hidden" name="action" value="increment">
+                                    <!-- Increment -->
+                                    <form action="/update_quantity" method="POST">
+                                        <input type="hidden" name="id" value="{{ row[0] }}">
+                                        <input type="hidden" name="action" value="increment">
+                                        <button type="submit" class="btn btn-sm btn-success">+</button>
+                                    </form>
 
-                                    <!-- Submit button: Increment quantity -->
-                                    <button type="submit" class="btn btn-md btn-success ms-2">+</button>
-                                </form>
-
-                                <!-- Form to decrement (subtract) shirt quantity -->
-                                <form action="/update_quantity" method="POST" style="display: inline;">
-                                    <!-- Hidden input: Shirt ID from database -->
-                                    <input type="hidden" name="id" value="{{ row[0] }}">
-
-                                    <!-- Hidden input: Action type sent to server -->
-                                    <input type="hidden" name="action" value="decrement">
-
-                                    <!-- Submit button: Decrement quantity -->
-                                    <button type="submit" class="btn btn-md btn-danger ms-2">-</button>
-                                </form>
+                                </div>
                             </td>
+
+
                         </tr>
                         {% endfor %}
                     </table>
@@ -120,7 +113,7 @@
 
                     <!-- Form Header -->
                     <div class="card-header bg-dark text-white text-center">
-                        <h3 class="mb-0">Manual Shirt Entry</h3>
+                        <h3 class="mb-0">Manual Entry</h3>
                     </div>
 
                     <!-- action is the flask route that the form is submitted to -->
