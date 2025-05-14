@@ -24,6 +24,35 @@
             <!-- Submit button to upload the selected file -->
             <input type="submit" value="Upload">
         </form>
+    </div><br>
+
+    <div>
+        
+        <!-- action is the flask route that the form is submitted to -->
+        <form class='text-center' action='/manual_shirt_entry' method = 'POST'>
+
+            <!-- id is for css, name is for flask to pull the form -->
+            <h3 class="text-center">Manual Shirt Entry</h3><br>
+            <label>Brand</label>
+            <input type="text" id='brand' name='brand'><br><br>
+
+            <label>Description</label>
+            <input type="text" id='description' name='description'><br><br>
+
+            <label>Color</label>
+            <input type="text" id='color' name='color'><br><br>
+
+            <label>Size</label>
+            <input type="text" id='size' name='size'><br><br>
+
+            <label>Quantity</label>
+            <input type="text" id='quantity' name='quantity'><br><br>
+
+            
+
+            <!-- Submit manual shirt entry -->
+            <input type='submit' value="Submit"</input>
+        </form>
     </div>
 
     <!-- ==================== Inventory Table Section ==================== -->
