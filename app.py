@@ -91,7 +91,12 @@ def upload():
     # os.path.join(...) builds the correct file path for saving on the server
     filePath = os.path.join(uploadFolder, file.filename)
     # saves the file to the file path
-    file.save(filePath)
+
+    # handle no file uploaded bug
+    if file:
+        file.save(filePath)
+    else:
+        return redirect('/')
 
     # get lines of data from the pdf
     allLines = getAllLinesFromPDF(filePath)
