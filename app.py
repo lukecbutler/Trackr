@@ -40,47 +40,40 @@ def home():
 # updates quantity of shirt in database, redirects back to single page application
 @app.route('/update_quantity', methods=['POST'])
 def update_quantity():
-
-    # get the shirt key from the database & set it to shirt_id
     shirt_id = request.form['id']
-
-    # pulls action value from button
-    # value of incremnt/decremnt will be set as variable depending on user click
     action = request.form['action']
 
-    # connect to database & create a cursor to run sql queries
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Get current quantity from shirt db, based on shirt id
-    cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,))
+    # Get current quantity (pre user click of + or -)
+    # execute, (executes) a tuple of parameters
+    # .fetchone() returns a single row, which behaves like a dictionary due to sqlite.Row
+    # ['quantity'] grabs the value under the quantity comumn for that shirt
+    current_quantity = cursor.execute(
+        'SELECT quantity FROM shirts WHERE id = ?', (shirt_id,)
+    ).fetchone()['quantity']
 
-    # set current-quantity to the quantity key
-    current_quantity = cursor.fetchone()['quantity']
-
-    # Update based on action
+    # Decide new quantity based on action
     if action == 'increment':
         new_quantity = current_quantity + 1
     elif action == 'decrement':
-        new_quantity = max(0, current_quantity - 1)  # Prevent negative quantities
-        # delete shirt from database if quantity hits 0
-        if new_quantity < 1:
-            cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
+        new_quantity = max(0, current_quantity - 1)
 
+    # If new quantity is 0, delete the shirt using the shirt id
+    if new_quantity == 0:
+        cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
+    # Else set the shirt to the new quantity using the shirt id
+    else:
+        cursor.execute('''
+            UPDATE shirts SET quantity = ? WHERE id = ?
+        ''', (new_quantity, shirt_id))
 
-    # if shirt quantity is not at 0, update the quantity
-    # Update database
-    cursor.execute('''
-        UPDATE shirts
-        SET quantity = ?
-        WHERE id = ?
-    ''', (new_quantity, shirt_id))
-
-    # commit sql queries to database
+    # Commit changes & close the db connection
     conn.commit()
     conn.close()
 
-    # redirect back to the home directory
+    # Redirect user back to single page application
     return redirect("/")
 
 

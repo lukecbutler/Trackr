@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory System</title>
+    <title>The Cotton Chronicles</title>
 
     <!-- Import Bootstrap 5 CSS from CDN for responsive styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -27,12 +27,13 @@
         <hr>
     </div>
 
+
     <div>
         
         <!-- action is the flask route that the form is submitted to -->
         <form class='text-center' action='/manual_shirt_entry' method = 'POST'>
 
-            <!-- id is for css, name is for flask to pull the form -->
+            <!-- id is for css or js, name is for flask to pull the form with request.form['brand'] -->
             <h3 class="text-center">Manual Shirt Entry</h3><br>
             <label>Brand</label>
             <input type="text" id='brand' name='brand'><br><br>
@@ -52,7 +53,7 @@
             
 
             <!-- Submit manual shirt entry -->
-            <input type='submit' value="Submit"</input>
+            <input type='submit' value="Submit">
         </form>
     </div>
     
@@ -65,9 +66,13 @@
         <h1 class="mb-3 mt-3">T-Shirt Inventory</h1>
 
         <!-- Bootstrap-styled table to display inventory data -->
+        <!-- table-hover: highlight row on hover -->
+        <!-- table-striped: zebra strip rows -->
+        <!-- table-sm: compat spacing -->
         <table class="table mt-2 table-hover table-striped table-sm">
 
             <!-- Table header row describing each column -->
+            <!-- Each descibes a column in the table -->
             <tr>
                 <th>Brand</th>
                 <th>Description</th>
@@ -78,6 +83,7 @@
             </tr>
 
             <!-- Dynamically generate table rows using Jinja2 loop -->
+            <!-- rows are created from looping over list of shirts passed from flask backend -->
             {% for row in shirts %}
             <tr>
                 <!-- Display shirt attributes from database row -->
@@ -91,6 +97,7 @@
                     <!-- ==================== Quantity Action Buttons ==================== -->
 
                     <!-- Form to increment (add) shirt quantity -->
+                    <!-- Each button is repeated for each shirt that is shown due to the jinja2 syntax -->
                     <form action="/update_quantity" method="POST" style="display: inline;">
                         <!-- Hidden input: Shirt ID from database -->
                         <input type="hidden" name="id" value="{{ row[0] }}">
