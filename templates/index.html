@@ -10,121 +10,165 @@
 </head>
 <body class="bg-light">
 
-    <!-- ==================== File Upload Section ==================== -->
+    <!-- ==================== Start File Upload Section ==================== -->
+    <!-- =================================================================== -->
     <div class="text-center">
 
         <!-- Section Header -->
-        <h2 class="mt-4">For S&S Invoice's:</h2>
+        <h2 class="mt-4">S&S Invoice Upload:</h2>
 
         <!-- File upload form for submitting S&S invoice files -->
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <!-- File input field for selecting a file -->
-            <input type="file" name="file">
+            <input class="form-control w-50 mx-auto my-2" type="file" name="file">
 
             <!-- Submit button to upload the selected file -->
-            <input type="submit" value="Upload">
+            <input class="btn btn-secondary" type="submit" value="Upload">
         </form>
         <hr>
     </div>
+    <!-- =================================================================== -->
+    <!-- ==================== End File Upload Section ====================== -->
 
 
-    <div>
-        
-        <!-- action is the flask route that the form is submitted to -->
-        <form class='text-center' action='/manual_shirt_entry' method = 'POST'>
 
-            <!-- id is for css or js, name is for flask to pull the form with request.form['brand'] -->
-            <h3 class="text-center">Manual Shirt Entry</h3><br>
-            <label>Brand</label>
-            <input type="text" id='brand' name='brand'><br><br>
+    <!-- ==================== Start Grid Container for Inventory Table ========================= -->
+    <!-- ======================================================================================= -->
+    <div class="container-fluid px-4">
 
-            <label>Description</label>
-            <input type="text" id='description' name='description'><br><br>
+        <!-- Create div to set bootstrap rows -->
+        <div class="row g-4 justify-content-center"> 
 
-            <label>Color</label>
-            <input type="text" id='color' name='color'><br><br>
+            <!-- ==================== Start Inventory Table Section ==================== -->
+            <!-- ====================================================================== -->
+            <div class="col-lg-9">
+                <div class="card mx-auto shadow text-center">
 
-            <label>Size</label>
-            <input type="text" id='size' name='size'><br><br>
+                    <!-- Main page header for inventory table -->
+                    <h1 class="card-header bg-dark text-white mb-3">T-Shirt Inventory</h1>
 
-            <label>Quantity</label>
-            <input type="text" id='quantity' name='quantity' required><br><br>
+                    <!-- Bootstrap-styled table to display inventory data -->
+                    <!-- table-hover: highlight row on hover -->
+                    <!-- table-striped: zebra strip rows -->
+                    <!-- table-sm: compact spacing -->
+                    <table class="table mt-2 table-hover table-striped table-sm">
 
-            
+                        <!-- Table header row describing each column -->
+                        <!-- Each describes a column in the table -->
+                        <tr>
+                            <th>Brand</th>
+                            <th>Description</th>
+                            <th>Color</th>
+                            <th>Size</th>
+                            <th>Quantity</th>
+                            <th>Actions</th>
+                        </tr>
 
-            <!-- Submit manual shirt entry -->
-            <input type='submit' value="Submit">
-        </form>
+                        <!-- Dynamically generate table rows using Jinja2 loop -->
+                        <!-- rows are created from looping over list of shirts passed from flask backend -->
+                        {% for row in shirts %}
+                        <tr>
+                            <!-- Display shirt attributes from database row -->
+                            <td>{{ row[1] }}</td> <!-- Brand -->
+                            <td>{{ row[2] }}</td> <!-- Description -->
+                            <td>{{ row[3] }}</td> <!-- Color -->
+                            <td>{{ row[4] }}</td> <!-- Size -->
+                            <td>{{ row[5] }}</td> <!-- Quantity -->
+
+                            <td>
+                                <!-- ==================== Quantity Action Buttons ==================== -->
+
+                                <!-- Form to increment (add) shirt quantity -->
+                                <!-- Each button is repeated for each shirt that is shown due to the jinja2 syntax -->
+                                <form action="/update_quantity" method="POST" style="display: inline;">
+                                    <!-- Hidden input: Shirt ID from database -->
+                                    <input type="hidden" name="id" value="{{ row[0] }}">
+
+                                    <!-- Hidden input: Action type sent to server -->
+                                    <input type="hidden" name="action" value="increment">
+
+                                    <!-- Submit button: Increment quantity -->
+                                    <button type="submit" class="btn btn-md btn-success ms-2">+</button>
+                                </form>
+
+                                <!-- Form to decrement (subtract) shirt quantity -->
+                                <form action="/update_quantity" method="POST" style="display: inline;">
+                                    <!-- Hidden input: Shirt ID from database -->
+                                    <input type="hidden" name="id" value="{{ row[0] }}">
+
+                                    <!-- Hidden input: Action type sent to server -->
+                                    <input type="hidden" name="action" value="decrement">
+
+                                    <!-- Submit button: Decrement quantity -->
+                                    <button type="submit" class="btn btn-md btn-danger ms-2">-</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            <!-- ===================================================================== -->
+            <!-- ==================== End Inventory Table Section ==================== -->
+
+
+
+            <!-- ================= Start Manual Shirt Entry Section ================ -->
+            <!-- =================================================================== -->
+            <div class="col-lg-3 mb-4">
+                <div class="card mx-auto shadow">
+
+                    <!-- Form Header -->
+                    <div class="card-header bg-dark text-white text-center">
+                        <h3 class="mb-0">Manual Shirt Entry</h3>
+                    </div>
+
+                    <!-- action is the flask route that the form is submitted to -->
+                    <div class="card-body">
+                        <form action="/manual_shirt_entry" method="POST">
+
+                            <!-- id is for css or js, name is for flask to pull the form with request.form['brand'] -->
+                            <div class="mb-3">
+                                <label class="form-label" for="brand">Brand</label>
+                                <input class="form-control" type="text" id="brand" name="brand">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="description">Description</label>
+                                <input class="form-control" type="text" id="description" name="description">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="color">Color</label>
+                                <input class="form-control" type="text" id="color" name="color">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="size">Size</label>
+                                <input class="form-control" type="text" id="size" name="size">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="quantity">Quantity</label>
+                                <input class="form-control" type="text" id="quantity" name="quantity" required>
+                            </div>
+
+                            <!-- Submit manual shirt entry -->
+                            <div class="d-grid">
+                                <input class="btn btn-secondary" type="submit" value="Submit">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- =================================================================== -->
+            <!-- ================== End Manual Shirt Entry Section ================= -->
+
+        </div>
+
     </div>
-    
-    <hr>
-
-    <!-- ==================== Inventory Table Section ==================== -->
-    <div class="container text-center">
-
-        <!-- Main page header for inventory table -->
-        <h1 class="mb-3 mt-3">T-Shirt Inventory</h1>
-
-        <!-- Bootstrap-styled table to display inventory data -->
-        <!-- table-hover: highlight row on hover -->
-        <!-- table-striped: zebra strip rows -->
-        <!-- table-sm: compat spacing -->
-        <table class="table mt-2 table-hover table-striped table-sm">
-
-            <!-- Table header row describing each column -->
-            <!-- Each descibes a column in the table -->
-            <tr>
-                <th>Brand</th>
-                <th>Description</th>
-                <th>Color</th>
-                <th>Size</th>
-                <th>Quantity</th>
-                <th>Actions</th>
-            </tr>
-
-            <!-- Dynamically generate table rows using Jinja2 loop -->
-            <!-- rows are created from looping over list of shirts passed from flask backend -->
-            {% for row in shirts %}
-            <tr>
-                <!-- Display shirt attributes from database row -->
-                <td>{{ row[1] }}</td> <!-- Brand -->
-                <td>{{ row[2] }}</td> <!-- Description -->
-                <td>{{ row[3] }}</td> <!-- Color -->
-                <td>{{ row[4] }}</td> <!-- Size -->
-                <td>{{ row[5] }}</td> <!-- Quantity -->
-
-                <td>
-                    <!-- ==================== Quantity Action Buttons ==================== -->
-
-                    <!-- Form to increment (add) shirt quantity -->
-                    <!-- Each button is repeated for each shirt that is shown due to the jinja2 syntax -->
-                    <form action="/update_quantity" method="POST" style="display: inline;">
-                        <!-- Hidden input: Shirt ID from database -->
-                        <input type="hidden" name="id" value="{{ row[0] }}">
-
-                        <!-- Hidden input: Action type sent to server -->
-                        <input type="hidden" name="action" value="increment">
-
-                        <!-- Submit button: Increment quantity -->
-                        <button type="submit" class="btn btn-md btn-success ms-2">+</button>
-                    </form>
-
-                    <!-- Form to decrement (subtract) shirt quantity -->
-                    <form action="/update_quantity" method="POST" style="display: inline;">
-                        <!-- Hidden input: Shirt ID from database -->
-                        <input type="hidden" name="id" value="{{ row[0] }}">
-
-                        <!-- Hidden input: Action type sent to server -->
-                        <input type="hidden" name="action" value="decrement">
-
-                        <!-- Submit button: Decrement quantity -->
-                        <button type="submit" class="btn btn-md btn-danger ms-2">-</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
+    <!-- =================================================================== -->
+    <!-- ==================== End Grid Container ========================== -->
 
 </body>
 </html>
