@@ -29,5 +29,20 @@ CREATE TABLE IF NOT EXISTS shirts (
 );
 ''')
 
+# Create shirt log table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS shirt_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    shirt_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    quantity_change INTEGER NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (shirt_id) REFERENCES shirts(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+'''
+)
+
 conn.commit()
 conn.close()
