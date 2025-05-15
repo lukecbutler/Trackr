@@ -13,6 +13,9 @@ uploadFolder = 'pdfsStoredOnServer'
 
 # get database connection - used throughout program to get db access
 # returns rows as key : value pairs
+
+# if Alice is user id = 1, and you add a shirt with user_id = 1, you're telling the database:
+# "This shirt belongs to Alice"
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # Enable dictionary-like access
