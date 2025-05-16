@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Trackr</title>
+</head>
+<body class="container">
+    <div class='row'>
+        <div class="text-center">
+            <h1>Welcome to Trackr!</h1>
+            <h3>What is Trackr?</h3>
+            <p>Trackr is print shop inventory software created to keep track of your shirts.</p>
+
+
+            <!-- url_for('flask_route') sends the user to that route specified in flask-->
+            <h2>Register an account <a href="{{ url_for('register') }}">here</a></h2>
+
+            <!-- so <a href="{{ url_for('login') }}" sends the user to the login route when the here is clicked -->
+            <h2>Already have an account? Sign in <a href="{{ url_for('login') }}">here</a></h2>
+        </div>  
+    </div>
+</body>
+</html>
