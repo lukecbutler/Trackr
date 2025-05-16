@@ -8,32 +8,37 @@
 </head>
 <body class="container">
     <div class="row">
-        <div class="col-md-8">
+        <div class="text-center">
             <h1>Registration</h1>
 
             <form action="/register" method='POST'>
 
                 <!-- Username div -->
-                <div>
+                <div class="my-2">
                     <label for="username">Username:</label>
                     <input type="text" id="username" name="username" required>
                 </div>
 
-                <div>
+
+                <!-- Email div -->
+                <div class="mb-2">
                     <label for="email">Email:</label>
                     <input type="emial" id="email" name="email" required>
                 </div>
 
-                <div>
+                <!-- Password div -->
+                <div class="mb-2">
                     <label for="password1">Password:</label>
                     <input type="password" id="password1" name="password1" required>
                 </div>
 
-                <div>
+                <!-- Repeat Password div -->
+                <div class="mb-2">
                     <label for="password2">Repeat Password:</label>
                     <input type="password" id="password2" name='password2' required>
                 </div>
 
+                <!-- Submit Button -->
                 <input type="submit" value="Submit">
 
             </form>
