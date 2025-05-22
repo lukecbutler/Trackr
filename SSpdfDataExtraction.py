@@ -43,7 +43,7 @@ def extractTableContent(lines):
         partsOfLine = line.split()
         if not partsOfLine:  # Skip empty lines
             continue
-            
+
         try:
             itemCode = partsOfLine[0]
 
