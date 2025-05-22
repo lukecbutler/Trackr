@@ -1,6 +1,5 @@
 from flask import request, render_template, redirect
 
-
 """
 Display the landing page or redirect logged-in users to their home page.
 
@@ -14,6 +13,7 @@ Parameters:
 Returns:
     A redirect response to '/home' or the rendered landing page HTML.
 """
+
 def landingPage():
     # if user has a cookie, send them to home page
     userID = request.cookies.get('userID')

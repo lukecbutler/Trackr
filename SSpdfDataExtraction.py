@@ -95,6 +95,13 @@ def processPDF(filePath):
 
 '''
 
+PDF data extraction that for sure works
+
+
+
+
+
+
 import pdfplumber
 
 def getAllLinesFromPDF(file):
