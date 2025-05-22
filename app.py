@@ -1,7 +1,9 @@
-from flask import Flask, request, render_template, redirect, flash, make_response
+from flask import Flask, request, render_template, redirect, flash, make_response, url_for
 from SSpdfDataExtraction import getAllLinesFromPDF, extractTableContent
+from werkzeug.security import generate_password_hash, check_password_hash # hashes passwords & checks the hash against the security key
 import sqlite3
 import os
+#url_for directs to the name of the def function. ie. 'def home()'
 
 app = Flask(__name__)
 
@@ -216,10 +218,13 @@ def register():
 
         # check if both passwords are the same - validate form data
         if password1 == password2:
-            finalPassword = password1
+            checkedPassword = password1
         else:
             flash('Passwords did not matchy match!')
             return redirect('/register')
+        
+        # hash the password to enter the database
+        hashedPassword = generate_password_hash(checkedPassword)
 
         # insert into database
         try:
@@ -229,7 +234,7 @@ def register():
             cursor.execute('''
                 INSERT INTO users (firstName, lastName, email, password)
                 VALUES(?,?,?,?)
-            ''', (firstName, lastName, email, finalPassword))
+            ''', (firstName, lastName, email, hashedPassword))
 
             conn.commit()
 
@@ -269,17 +274,29 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # get the user information from the database
+        # get the users row from the database - email as the user identifier
+        # returns sqlite row object
         user = cursor.execute('''
             SELECT * FROM users WHERE email = ?
-        ''', (email)).fetchone()
+        ''', (email,)).fetchone()
+
+        # check if the
+        if user and check_password_hash(user['password'], password): # true & true
+            resp = make_response(redirect(url_for('home'))) # url_for goes to def function
+            resp.set_cookie('user_id', str(user['id']), max_age=60*60*24*30)
+            return resp
+        flash("Email & Password do not match.")
+        return redirect('/login')
+
 
         # now we need to check if the users email & password match
+
 
         # if they do match, log in
 
         # if they don't match, do not log in & redirect back to login with error message 'incorrect email & password combo'
-
+    else:
+        return render_template('login.html')
 
 
 
