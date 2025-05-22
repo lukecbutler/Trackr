@@ -1,5 +1,5 @@
 from flask import request, redirect, render_template
-from SSpdfDataExtraction import getAllLinesFromPDF, extractTableContent
+from SSpdfDataExtraction import processPDF
 from db import get_db_connection, shirtsToDatabase
 import os
 
@@ -141,11 +141,8 @@ def upload():
     filePath = os.path.join(uploadFolder, file.filename)
     file.save(filePath)
 
-    # extract all lines from the file
-    allLines = getAllLinesFromPDF(filePath)
-
-    # use those lines to extract the shirt table data
-    pdfData = extractTableContent(allLines)
+    # extract shirt data from the PDF
+    pdfData = processPDF(filePath)
 
     # get userID from cookie
     userID = request.cookies.get('userID')
