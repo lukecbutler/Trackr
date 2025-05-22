@@ -28,8 +28,17 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row  # Enable dictionary-like access
     return conn
 
+
+@app.route('/')
+def landingPage():
+    userID = request.cookies.get('userID')
+    if userID:
+        return redirect('/home') # redirects logged-in users with proper cookeis to their inventory
+    
+    return render_template('landingPage.html') # directs users to this html if they don't have cookies
+
 # home route - code runs when user enters trackr
-@app.route('/', methods=['GET'])
+@app.route('/home', methods=['GET'])
 def home():
 
     userID = request.cookies.get('userID')
@@ -90,7 +99,7 @@ def update_quantity():
     conn.close()
 
     # Redirect user back to single page application
-    return redirect("/")
+    return redirect('/')
 
 
 # upload route - takes file, save it to server, 
@@ -306,7 +315,11 @@ def login():
         return render_template('login.html')
         # if they don't match, do not log in & redirect back to login with error message 'incorrect email & password combo'
 
-
+@app.route('/logout')
+def logout():
+    resp = make_response(redirect(url_for('landingPage')))
+    resp.set_cookie('userID','', expires=0) # clears the cookie
+    return resp
 
 
 
