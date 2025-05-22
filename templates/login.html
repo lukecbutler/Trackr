@@ -12,6 +12,21 @@
             <h1>Login</h1>
             <form action="/login" method="POST">
 
+
+                <!-- creates variable messages -->
+                <!-- get_flashed_messages() pulls any flashes messages that are currently stored in session -->
+
+                <!-- flashed messages only exist for one request, so when a page refresh occurs they dissappear -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
                 <!-- Email div -->
                 <div class="mb-2">
                     <label for="email">Email:</label>
