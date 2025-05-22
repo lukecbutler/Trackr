@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ''')
 
-# Create the Shirts table with user_id foreign key
+# Create the Shirts table with userID foreign key
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS shirts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS shirts (
     color TEXT NOT NULL,
     size TEXT NOT NULL,
     quantity INTEGER NOT NULL,
-    user_id INTEGER,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    userID INTEGER,
+    FOREIGN KEY(userID) REFERENCES users(id)
 );
 ''')
 
@@ -35,12 +35,12 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS shirt_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shirt_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
+    userID INTEGER NOT NULL,
     action TEXT NOT NULL,
     quantity_change INTEGER NOT NULL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (shirt_id) REFERENCES shirts(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (userID) REFERENCES users(id)
 );
 '''
 )

@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template, redirect, flash, make_response
+from flask import Flask, request, render_template, redirect, flash, make_response, url_for
 from SSpdfDataExtraction import getAllLinesFromPDF, extractTableContent
+from werkzeug.security import generate_password_hash, check_password_hash # hashes passwords & checks the hash against the security key
 import sqlite3
 import os
 
@@ -20,7 +21,7 @@ os.makedirs(uploadFolder, exist_ok=True)
 # get database connection - used throughout program to get db access
 # returns rows as key : value pairs
 
-# if Alice is user id = 1, and you add a shirt with user_id = 1, you're telling the database:
+# if Alice is user id = 1, and you add a shirt with userID = 1, you're telling the database:
 # "This shirt belongs to Alice"
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -45,7 +46,7 @@ def home():
     shirts = cursor.execute('''
         SELECT id, brand, description, color, size, quantity 
         FROM shirts 
-        WHERE user_id = ?;
+        WHERE userID = ?;
     ''',(userID,)).fetchall()
     conn.close()
 
@@ -141,7 +142,7 @@ def shirtsToDatabase(pdfTableData, userID):
         # Check if the shirt already exists in the database
         cursor.execute('''
             SELECT id, quantity FROM shirts
-            WHERE description = ? AND color = ? AND size = ? AND user_id = ?
+            WHERE description = ? AND color = ? AND size = ? AND userID = ?
         ''', (description, color, size, userID))
 
         existing_shirt = cursor.fetchone()
@@ -157,7 +158,7 @@ def shirtsToDatabase(pdfTableData, userID):
         else:
             # If the shirt does not exist, insert a new record
             cursor.execute('''
-                INSERT INTO shirts (brand, description, color, size, quantity, user_id)
+                INSERT INTO shirts (brand, description, color, size, quantity, userID)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (brand, description, color, size, int(quantity), userID))
 
@@ -192,7 +193,7 @@ def manual_shirt_entry():
 
         # sql query to input shirt into database
         cursor.execute('''
-            INSERT INTO shirts (brand, description, color, size, quantity, user_id)
+            INSERT INTO shirts (brand, description, color, size, quantity, userID)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (brand, description, color, size, int(quantity), userID))
 
@@ -216,10 +217,12 @@ def register():
 
         # check if both passwords are the same - validate form data
         if password1 == password2:
-            finalPassword = password1
+            checkedPassword = password1
         else:
             flash('Passwords did not matchy match!')
             return redirect('/register')
+        
+        hashedPassword = generate_password_hash(checkedPassword)
 
         # insert into database
         try:
@@ -229,7 +232,7 @@ def register():
             cursor.execute('''
                 INSERT INTO users (firstName, lastName, email, password)
                 VALUES(?,?,?,?)
-            ''', (firstName, lastName, email, finalPassword))
+            ''', (firstName, lastName, email, hashedPassword))
 
             conn.commit()
 
@@ -272,12 +275,35 @@ def login():
         # get the user information from the database
         user = cursor.execute('''
             SELECT * FROM users WHERE email = ?
-        ''', (email)).fetchone()
+        ''', (email,)).fetchone()
+
+        if not user:
+            flash('no user found!')
+            return render_template('login.html')
+        
+        print("USER:", user['email'])
+        print("PASSWORD CHECK:", check_password_hash(user['password'], password) if user else "User not found")
+
+
 
         # now we need to check if the users email & password match
+        if user and check_password_hash(user['password'], password):
 
-        # if they do match, log in
+            # if they do match, create response object for redirect to home
+            resp = make_response(redirect(url_for('home')))
 
+            # set userID cookie to be used to know which user is logged in
+            resp.set_cookie('userID', str(user['id']), max_age=60*60*24*30)
+
+            return resp
+
+        else:
+            flash('email & password do not match!')
+            return render_template('login.html')
+
+    # base login html
+    else:
+        return render_template('login.html')
         # if they don't match, do not log in & redirect back to login with error message 'incorrect email & password combo'
 
 
