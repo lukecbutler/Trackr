@@ -13,12 +13,32 @@
 
             <form action="/register" method='POST'>
 
-                <!-- Username div -->
+
+                <!-- creates variable messages -->
+                 <!-- get_flashed_messages() pulls any flashes messages that are currently stored in session -->
+
+                 <!-- flashed messages only exist for one request, so when a page refresh occurs they dissappear -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- first name div -->
                 <div class="my-2">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="firstName">First Name:</label>
+                    <input type="text" id="firstName" name="firstName" required>
                 </div>
 
+                <!-- last name div -->
+                <div class="my-2">
+                    <label for="lastName">Last Name:</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
 
                 <!-- Email div -->
                 <div class="mb-2">
