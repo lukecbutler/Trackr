@@ -1,57 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Trackr</title>
 
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Font Awesome (for the shirt icon) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 </head>
-<body class="container">
-    <div class="row">
-        <div class="text-center">
-            <h1>Login</h1>
+<body class="bg-light d-flex align-items-center" style="min-height: 100vh;">
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+
+        <div class="card shadow-lg border-0">
+          <div class="card-body p-5">
+
+            <!-- Logo -->
+            <div class="text-center mb-4">
+              <i class="fas fa-tshirt text-primary" style="font-size: 4rem;"></i>
+              <h1 class="fw-bold mt-2">Trackr</h1>
+            </div>
+
+            <!-- Page Heading -->
+            <h2 class="text-center mb-4">
+              <i class="fas fa-sign-in-alt text-primary me-2"></i> Login to your account
+            </h2>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="alert alert-warning">
+                  {% for message in messages %}
+                    <div>{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <!-- Login Form -->
             <form action="/login" method="POST">
 
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-control" required />
+              </div>
 
-                <!-- creates variable messages -->
-                <!-- get_flashed_messages() pulls any flashes messages that are currently stored in session -->
+              <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required />
+              </div>
 
-                <!-- flashed messages only exist for one request, so when a page refresh occurs they dissappear -->
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <div class="flash-messages">
-                        {% for message in messages %}
-                            <p>{{ message }}</p>
-                        {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="fas fa-sign-in-alt me-2"></i> Login
+                </button>
+              </div>
 
-                <!-- Email div -->
-                <div class="mb-2">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-
-                <!-- Password div -->
-                <div class="mb-2">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-
-                <!-- Submit Button -->
-                <input type="submit" value="Submit">
-
-
-                <div class="text-center my-2">
-                    <h5>
-                        <a href="{{ url_for('register') }}">Register Here</a>
-                    </h5>
-                </div>
+              <div class="text-center">
+                Don't have an account?
+                <a href="{{ url_for('register') }}" class="text-decoration-none">Register here</a>
+              </div>
 
             </form>
+
+          </div>
         </div>
+
+      </div>
     </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
