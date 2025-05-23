@@ -1,10 +1,9 @@
 from flask import request, redirect, render_template
 from SSpdfDataExtraction import processPDF
-from db import get_db_connection, shirtsToDatabase
+from db import get_db_connection, pdfDataToDatabase
 import os
 
 uploadFolder = 'pdfsStoredOnServer'
-
 
 """
 Display the logged-in user's shirt inventory.
@@ -149,7 +148,7 @@ def upload():
     if userID:
         userID = int(userID)
 
-    # insert shirt data into database
-    shirtsToDatabase(pdfData, userID)
+    # insert shirt data (pdf data as a list of list) into database
+    pdfDataToDatabase(pdfData, userID)
 
     return redirect("/")

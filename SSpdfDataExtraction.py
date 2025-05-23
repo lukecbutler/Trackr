@@ -8,7 +8,7 @@ def processPDF(filePath):
         filePath (str): The path to the PDF file.
 
     Returns:
-        list: A list of lists. Each sublist contains:
+        list: A list of lists. Each sublist contains shirt data including:
               [brand, description, color, size, quantity]
     """
     # This list will store all the extracted shirt entries

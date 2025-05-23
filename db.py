@@ -26,7 +26,7 @@ Behavior:
         its quantity is increased by the incoming amount.
     - If the shirt does not exist, it is inserted as a new record.
 '''
-def shirtsToDatabase(pdfData, userID):
+def pdfDataToDatabase(pdfData, userID):
     conn = get_db_connection()
     cursor = conn.cursor()
     print(pdfData)
