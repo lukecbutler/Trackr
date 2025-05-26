@@ -51,7 +51,12 @@
               </div>
 
               <div class="mb-4">
-                <label for="password" class="form-label">Password</label>
+                <div class="d-flex justify-content-between align-items-center">
+                  <label for="password" class="form-label">Password</label>
+
+                  <!-- a tag sends the user to the proper route for entering their email, to then reset their pasword -->
+                  <a href="{{ url_for('accountRecoveryEmail') }}" class="form-label">Forgot Password?</a>
+                </div>
                 <input type="password" id="password" name="password" class="form-control" required />
               </div>
 
