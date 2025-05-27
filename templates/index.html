@@ -74,6 +74,14 @@
                     <!-- table-striped: zebra strip rows -->
                     <!-- table-sm: compact spacing -->
 
+                    <form class="mb-3 mx-1" method="get" action="/home">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search shirts..." value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                    </form>
+
+
                     <!-- Sorting Options -->
                     <div>Sort by:
                     <a href="/home?sortBy=brand&order=asc">Brand ↑</a> |

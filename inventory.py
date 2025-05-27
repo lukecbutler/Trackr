@@ -29,6 +29,9 @@ def home():
     # order is pulled from the url - pulls 'order' from the url argument. 'asc' is the default value
     sortOrder = request.args.get('order', 'asc')
 
+    # get optional search query from the URL (e.g., ?search=blue)
+    search = request.args.get('search', '')
+
     # SQL INJECTION PROTECTION
     # If url argument is tampered with, default to 'brand'
     if sortBy not in ['brand', 'description', 'color', 'size', 'quantity']:
@@ -71,15 +74,34 @@ def home():
     else:
         order_clause = f'ORDER BY {sortBy} {sortOrder}'
 
-    shirts = cursor.execute(f'''
-        SELECT id, brand, description, color, size, quantity 
-        FROM shirts 
-        WHERE userID = ?
-        {order_clause};
-    ''', (userID,)).fetchall()
+    # If a search term was entered, use LIKE to match any partial matches in brand, description, color, or size
+    if search:
+        search_query = f"%{search}%"
+        shirts = cursor.execute(f'''
+            SELECT id, brand, description, color, size, quantity 
+            FROM shirts 
+            WHERE userID = ?
+            AND (
+                brand LIKE ? OR
+                description LIKE ? OR
+                color LIKE ? OR
+                size LIKE ?
+            )
+            {order_clause};
+        ''', (userID, search_query, search_query, search_query, search_query)).fetchall()
+    else:
+        shirts = cursor.execute(f'''
+            SELECT id, brand, description, color, size, quantity 
+            FROM shirts 
+            WHERE userID = ?
+            {order_clause};
+        ''', (userID,)).fetchall()
 
     conn.close()
-    return render_template("index.html", shirts=shirts)
+    
+    # Pass search term to template so it can stay in the search box
+    return render_template("index.html", shirts=shirts, search=search)
+
 
 """
 Update quantity of a shirt or delete it if quantity reaches zero.
