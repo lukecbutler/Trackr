@@ -151,16 +151,29 @@ def manual_shirt_entry():
     if userID:
         userID = int(userID)
 
-    # add shirt to database
+    # check if shirt already exists (same description, color, size, and user)
     cursor.execute('''
-        INSERT INTO shirts (brand, description, color, size, quantity, userID)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (brand, description, color, size, int(quantity), userID))
+        SELECT id, quantity FROM shirts
+        WHERE description = ? AND color = ? AND size = ? AND userID = ?
+    ''', (description, color, size, userID))
+    existing = cursor.fetchone()
+
+    if existing:
+        # if it does, update the quantity
+        new_quantity = existing['quantity'] + int(quantity)
+        cursor.execute('UPDATE shirts SET quantity = ? WHERE id = ?', (new_quantity, existing['id']))
+    else:
+        # if it doesn't, insert the new shirt
+        cursor.execute('''
+            INSERT INTO shirts (brand, description, color, size, quantity, userID)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (brand, description, color, size, int(quantity), userID))
 
     conn.commit()
     conn.close()
 
     return redirect('/')
+
 
 """
 Handle PDF upload and imports shirt data.
