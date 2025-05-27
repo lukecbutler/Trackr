@@ -18,19 +18,64 @@ Behavior:
 def home():
     # get the user id from the cookie
     userID = request.cookies.get('userID')
-    
+
     # if user doesn't have a cookie, they need to login first
     if not userID:
         return redirect('/login')
 
-    # if they do, then connect to database and show their shirt inventory
+    # get argument that describes how to sort the inventory
+    sortBy = request.args.get('sortBy', 'brand') 
+
+    # order is pulled from the url - pulls 'order' from the url argument. 'asc' is the default value
+    sortOrder = request.args.get('order', 'asc')
+
+    # SQL INJECTION PROTECTION
+    # If url argument is tampered with, default to 'brand'
+    if sortBy not in ['brand', 'description', 'color', 'size', 'quantity']:
+        sortBy = 'brand'
+
+    # Only allow 'asc' or 'desc'
+    if sortOrder not in ['asc', 'desc']:
+        sortOrder = 'asc'
+
+    # Connect to database and show user's shirt inventory
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    shirts = cursor.execute('''
+    # Handle custom sort order for size
+    if sortBy == 'size':
+        order_clause = f'''
+            ORDER BY CASE size
+                WHEN 'NB' THEN 1
+                WHEN '0-3M' THEN 2
+                WHEN '3-6M' THEN 3
+                WHEN '6-9M' THEN 4
+                WHEN '12M' THEN 5
+                WHEN '18M' THEN 6
+                WHEN '24M' THEN 7
+                WHEN '2T' THEN 8
+                WHEN '3T' THEN 9
+                WHEN '4T' THEN 10
+                WHEN '5T' THEN 11
+                WHEN 'XS' THEN 12
+                WHEN 'S' THEN 13
+                WHEN 'M' THEN 14
+                WHEN 'L' THEN 15
+                WHEN 'XL' THEN 16
+                WHEN '2XL' THEN 17
+                WHEN '3XL' THEN 18
+                WHEN '4XL' THEN 19
+                ELSE 20
+            END {sortOrder}
+        '''
+    else:
+        order_clause = f'ORDER BY {sortBy} {sortOrder}'
+
+    shirts = cursor.execute(f'''
         SELECT id, brand, description, color, size, quantity 
         FROM shirts 
-        WHERE userID = ?;
+        WHERE userID = ?
+        {order_clause};
     ''', (userID,)).fetchall()
 
     conn.close()
