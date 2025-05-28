@@ -205,12 +205,22 @@
                         </form>
                     </div>
                 </div>
+                {% with messages = get_flashed_messages() %}
+                   {% if messages %}
+                       <div class="alert alert-warning" role="alert">
+                           {% for message in messages %}
+                               {{message}}
+                           {% endfor %}
+                       </div>
+                   {% endif %}
+               {% endwith %}
             </div>
 
             
 
             <!-- =================================================================== -->
             <!-- ================== End Manual Shirt Entry Section ================= -->
+
 
         </div>
 
