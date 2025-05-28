@@ -1,4 +1,4 @@
-from flask import request, redirect, render_template
+from flask import request, redirect, render_template, flash
 from SSpdfDataExtraction import processPDF
 from db import get_db_connection, pdfDataToDatabase
 import os
@@ -15,6 +15,8 @@ Behavior:
     - Queries database for user's shirts.
     - Renders inventory template with shirt data.
 """
+# TODO: Break up sorting into sperate function
+# TODO: Break up searching into seperate function
 def home():
     # get the user id from the cookie
     userID = request.cookies.get('userID')
@@ -103,6 +105,25 @@ def home():
     return render_template("index.html", shirts=shirts, search=search)
 
 
+def deleteSelected():
+    # get list of selected IDs from the form
+    selectedIDs = request.form.getlist('selectedIDs')
+
+    if not selectedIDs:
+        return redirect('/home')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Use for loop to loop thorugh shirt ID's
+    for shirtID in selectedIDs:
+        cursor.execute('DELETE FROM shirts WHERE id = ?', (shirtID,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/home')
+
 """
 Update quantity of a shirt or delete it if quantity reaches zero.
 
@@ -115,6 +136,8 @@ Behavior:
     - Deletes shirt if quantity reaches zero.
     - Redirects back to inventory page.
 """
+
+#TODO: fix weird bug when no other fields are filled except quantity, the user cannot decrement the shirt row.
 def update_quantity():
     # Get data from form
     shirt_id = request.form['id']
@@ -173,6 +196,19 @@ def manual_shirt_entry():
     if userID:
         userID = int(userID)
 
+
+
+        try:
+            quantity = int(quantity)
+
+        except:
+            flash('Please enter only whole numbers!')
+            redirect('/home')
+
+
+            
+
+
     # check if shirt already exists (same description, color, size, and user)
     cursor.execute('''
         SELECT id, quantity FROM shirts
@@ -182,19 +218,19 @@ def manual_shirt_entry():
 
     if existing:
         # if it does, update the quantity
-        new_quantity = existing['quantity'] + int(quantity)
+        new_quantity = existing['quantity'] + quantity
         cursor.execute('UPDATE shirts SET quantity = ? WHERE id = ?', (new_quantity, existing['id']))
     else:
         # if it doesn't, insert the new shirt
         cursor.execute('''
             INSERT INTO shirts (brand, description, color, size, quantity, userID)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', (brand, description, color, size, int(quantity), userID))
+        ''', (brand, description, color, size, quantity, userID))
 
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return redirect('/home')
 
 
 """

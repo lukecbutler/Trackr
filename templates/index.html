@@ -93,12 +93,16 @@
                     <a href="/home?sortBy=size&order=asc">Size ↑</a> |
                     <a href="/home?sortBy=size&order=desc">Size ↓</a>
                     </div>
+                
+
+                <form action="/deleteSelected" method="POST">
 
                     <table class="table mt-2 table-hover table-striped table-sm">
 
                         <!-- Table header row describing each column -->
                         <!-- Each describes a column in the table -->
                         <tr>
+                            <th></th>
                             <th>Brand</th>
                             <th>Description</th>
                             <th>Color</th>
@@ -111,6 +115,9 @@
                         {% for row in shirts %}
                         <tr>
                             <!-- Display shirt attributes from database row -->
+                            <td>
+                                <input type="checkbox" name="selectedIDs" value="{{ row[0] }}">
+                            </td>
                             <td>{{ row[1] }}</td> <!-- Brand -->
                             <td>{{ row[2] }}</td> <!-- Description -->
                             <td>{{ row[3] }}</td> <!-- Color -->
@@ -142,8 +149,10 @@
                         </tr>
                         {% endfor %}
                     </table>
-                </div>
+                    <button type="submit" class="btn btn-danger mb-2">Delete Selected</button>
+                </form>
             </div>
+        </div>
             <!-- ===================================================================== -->
             <!-- ==================== End Inventory Table Section ==================== -->
 
@@ -197,6 +206,9 @@
                     </div>
                 </div>
             </div>
+
+            
+
             <!-- =================================================================== -->
             <!-- ================== End Manual Shirt Entry Section ================= -->
 
