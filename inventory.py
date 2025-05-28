@@ -202,11 +202,11 @@ def manual_shirt_entry():
             quantity = int(quantity)
 
         except:
-            flash('Please enter only whole numbers!')
-            redirect('/home')
+            flash('Enter only whole numbers please.')
+            return redirect('/home')
 
 
-            
+
 
 
     # check if shirt already exists (same description, color, size, and user)
