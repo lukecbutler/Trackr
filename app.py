@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # Local modules (each will define a route handler function)
 from auth import login, logout, register
-from inventory import home, update_quantity, manual_shirt_entry, upload
+from inventory import home, update_quantity, manual_shirt_entry, upload, deleteSelected
 from landing import landingPage
 from resetPassword import accountRecoveryEmail, sendRecoveryEmail, resetPassword
 
@@ -53,6 +53,9 @@ app.add_url_rule('/manual_shirt_entry', view_func=manual_shirt_entry, methods=['
 
 # handles file upload, reroutes to /home
 app.add_url_rule('/upload', view_func=upload, methods=['POST'])
+
+# handles mass deletion by user
+app.add_url_rule('/deleteSelected', view_func=deleteSelected, methods=['GET','POST'])
 
 
 def sendRecoveryEmailRoute():
