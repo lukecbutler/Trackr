@@ -4,6 +4,7 @@ import sqlite3
 conn = sqlite3.connect("shirts.db")
 cursor = conn.cursor()
 
+
 # Create the Users table
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS users (
