@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # Local modules (each will define a route handler function)
 from auth import login, logout, register
-from inventory import home, update_quantity, manual_shirt_entry, upload, deleteSelected
+from inventory import home, updateQuantity, manual_shirt_entry, upload, deleteSelected
 from landing import landingPage
 from resetPassword import accountRecoveryEmail, sendRecoveryEmail, resetPassword
 
@@ -46,7 +46,7 @@ app.add_url_rule('/register', view_func=register, methods=['GET', 'POST'])
 app.add_url_rule('/home', view_func=home, methods=['GET'])
 
 # updates quantity of shirt via increment/decrement button, reroutes to /home
-app.add_url_rule('/update_quantity', view_func=update_quantity, methods=['POST'])
+app.add_url_rule('/updateQuantity', view_func=updateQuantity, methods=['POST'])
 
 # manually adds shirt, reroutes to /home
 app.add_url_rule('/manual_shirt_entry', view_func=manual_shirt_entry, methods=['GET', 'POST'])

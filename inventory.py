@@ -138,35 +138,54 @@ Behavior:
 """
 
 #TODO: fix weird bug when no other fields are filled except quantity, the user cannot decrement the shirt row.
-def update_quantity():
-    # Get data from form
-    shirt_id = request.form['id']
-    action = request.form['action']
+from flask import jsonify
 
+
+def updateQuantity():
+
+    # reads raw json from the request body
+    # converts it to dictionary & stores at variable named data
+    data = request.get_json() # data is a dictionary
+
+    # use .get('...') to pull data from dictionary
+    shirt_id = data.get('id')
+    action = data.get('action')
+
+    # make database connection
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Get current quantity of the shirt
-    current_quantity = cursor.execute(
-        'SELECT quantity FROM shirts WHERE id = ?', (shirt_id,)
-    ).fetchone()['quantity']
+    # Fetch shirt data from database - comes as a dictionary
+    shirt = cursor.execute('SELECT quantity FROM shirts WHERE id = ?', (shirt_id,)).fetchone()
 
-    # Adjust quantity up or down based on the action
-    if action == 'increment':
-        new_quantity = current_quantity + 1
-    elif action == 'decrement':
-        new_quantity = max(0, current_quantity - 1)
+    # if nothing is found in the shirt return error message
+    if not shirt:
+        return jsonify(success=False, message="Shirt not found")
 
-    # If the new quantity is 0, delete the shirt
-    if new_quantity == 0:
+    # get the quanitty from the shirt data - use shirt['quantity'] as the shirt is a dictionary
+    quantity = shirt['quantity']
+
+    # Adjust quantity
+    if action == 'increment': # if button action in incremnt, add 1 to the quantity
+        newQuantity = quantity + 1
+    elif action == 'decrement': # if button actioin is decrement, subtract 1 from the quantity
+        newQuantity = quantity - 1 
+    else:
+        return jsonify(success=False, message="Invalid action") # if error return "invalid action"
+
+    # Delete is new quanity
+    if newQuantity <= 0:
         cursor.execute('DELETE FROM shirts WHERE id = ?', (shirt_id,))
     else:
-        cursor.execute('UPDATE shirts SET quantity = ? WHERE id = ?', (new_quantity, shirt_id))
+        cursor.execute('UPDATE shirts SET quantity = ? WHERE id = ?', (newQuantity, shirt_id))
 
+    # close database connection
     conn.commit()
     conn.close()
 
-    return redirect('/')
+    return jsonify(success=True, newQuantity=newQuantity)
+
+
 
 """
 Add a single shirt entry manually via form.

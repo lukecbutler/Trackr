@@ -125,22 +125,16 @@
                             <td>
                                 <div class="d-flex justify-content-center align-items-center gap-2">
                                     
-                                    <!-- Decrement -->
-                                    <form action="/update_quantity" method="POST">
-                                        <input type="hidden" name="id" value="{{ row[0] }}">
-                                        <input type="hidden" name="action" value="decrement">
-                                        <button type="submit" class="btn btn-sm btn-danger">-</button>
-                                    </form>
 
-                                    <!-- Quantity Display (centered number) -->
-                                    <span class="px-2 fw-bold">{{ row[5] }}</span>
 
-                                    <!-- Increment -->
-                                    <form action="/update_quantity" method="POST">
-                                        <input type="hidden" name="id" value="{{ row[0] }}">
-                                        <input type="hidden" name="action" value="increment">
-                                        <button type="submit" class="btn btn-sm btn-success">+</button>
-                                    </form>
+                                        <!-- decrement -->
+                                        <button type='button' class="btn btn-sm btn-outline-secondary updateButton" dataId="{{ row[0] }}" dataAction="decrement">-</button>
+                                        
+                                        <!-- the quantity from the database -->
+                                        <span id="qty-{{ row[0] }}">{{ row[5] }}</span>
+
+                                        <!-- increment -->
+                                        <button type='button' class="btn btn-sm btn-outline-secondary updateButton" dataId="{{ row[0] }}" dataAction="increment">+</button>
 
                                 </div>
                             </td>
@@ -229,4 +223,76 @@
     <!-- ==================== End Grid Container ========================== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>    
 </body>
+<script>
+// wait until the entire webpage (the entire DOM) has loaded before running this function
+document.addEventListener('DOMContentLoaded', function () {
+
+  // get the buttons pressed on the webapge
+  // grabs all elements with the class name updateButton and puts them in a list named buttons
+  // i.e. if there are 10 buttons with that class, all 10 buttons will exist in this list
+  const buttons = document.querySelectorAll('.updateButton');
+
+  // for each of the buttons pressed do the following
+  // for each button in the buttons list, do the following stuff inside the {}
+  // btn is a temperary name, like inside for loop
+  buttons.forEach(btn => {
+
+    // for each of the btns, listen for a click, if they are clicked, run the function
+    // the e is the event object, which contains information about the click, like when it was clicked, and which button was clicked
+    btn.addEventListener('click', function (e) {
+
+      // prevent form submission (safety) ; stops default browser actions
+      // for example, the default action of a form is to reload the page. e.preventDefault() stops it. - this line prevents the reload
+      e.preventDefault(); 
+
+      // 'this' refers to the button that was clicked.
+
+      // 'dataID' is a custom attribute set on the button - the dataId pulls the ID of the shirt row from the database
+      const shirtId = this.getAttribute('dataId');
+
+      // 'dataAction' is a custom attribute set on the button - the dataAction is either increment, or decrement, depending on the button pressed.
+      const action = this.getAttribute('dataAction');
+
+      // fetch is the new way of sending data to the backend.
+      // '/updateQuantity' sends the data to the specified route. In this case it is the '/updateQuantity' route
+      fetch('/updateQuantity', { // STEP 1: SEND THE REQUEST
+        // sent as a 'POST'
+        method: 'POST',
+        // tells server the content is json
+        headers: {
+          'Content-Type': 'application/json', // tells flask json data is being sent
+        },
+        // json is created by JSON.stringify({...}) ; id/action are the keys, and shirtID and action are the values
+        body: JSON.stringify({ id: shirtId, action: action }) // sends json data as a string
+      })
+      // think of .then like - "What should I do when the server sends me something"
+      // the response of the server is then parsed to json data
+      .then(response => response.json()) // STEP 2: PARSE JSON WHEN IT ARRIVES
+
+      // the data is the json data that was parsed in the previous .then
+      .then(data => { // STEP 3: USE THE PARSED JSON
+
+        // if there was data sent back hit this logic
+        if (data.success) {
+          if (data.newQuantity === 0) {
+            // remove the entire row from the DOM
+            //
+            const row = this.closest('tr');
+            row.parentNode.removeChild(row);
+          } else {
+            // update the quantity text
+            document.getElementById(`qty-${shirtId}`).textContent = data.newQuantity;
+          }
+
+          // if there was not data sent 
+        } else {
+          alert(data.message || "Update failed");
+        }
+      });
+    });
+  });
+});
+</script>
+
+
 </html>

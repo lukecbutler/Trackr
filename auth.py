@@ -4,7 +4,6 @@ from db import get_db_connection
 import sqlite3
 
 
-
 """
 Handle user registration.
 
@@ -98,7 +97,6 @@ def login():
             return render_template('login.html')
 
     return render_template('login.html')
-
 
 
 """
